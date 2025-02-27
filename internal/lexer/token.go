@@ -2,6 +2,15 @@ package lexer
 
 import "fmt"
 
+const (
+	RightExpr = "}}"
+	LeftExpr  = "{{"
+	LeftComm  = "{#"
+	RightComm = "#}"
+	LeftStmt  = "{%"
+	RightStmt = "%}"
+)
+
 type TokenType int
 
 const (
@@ -10,19 +19,19 @@ const (
 	TokenWhitespace
 	TokenText
 	TokenSymbol
-	TokenLeftExpr     // {{
-	TokenRightExpr    // }}
-	TokenLeftComment  // {#
-	TokenRightComment // #}
-	TokenLeftStmt     // {%
-	TokenRightStmt    // %}
+	TokenLeftExpr  // {{
+	TokenRightExpr // }}
+	TokenLeftComm  // {#
+	TokenRightComm // #}
+	TokenLeftStmt  // {%
+	TokenRightStmt // %}
 )
 
 type Token struct {
-	typ TokenType
-	val string
+	Typ TokenType
+	Val string
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("{Type: %v, Value: %q}", t.typ, t.val)
+	return fmt.Sprintf("{Type: %v, Value: %q}", t.Typ, t.Val)
 }
