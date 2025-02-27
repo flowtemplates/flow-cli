@@ -21,7 +21,7 @@ func TestLexer(t *testing.T) {
 			},
 		},
 		{
-			name:  "Text with no delimiters",
+			name:  "Text with no custom syntax",
 			input: "Hello, world!",
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenText, Val: "Hello, world!"},
@@ -131,6 +131,117 @@ func TestLexer(t *testing.T) {
 				{Typ: lexer.TokenEOF, Val: ""},
 			},
 		},
+		{
+			name:  "Integer value",
+			input: "{{10}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenInteger, Val: "10"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Integer value with unclosed expression",
+			input: "{{10} text",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenInteger, Val: "10"},
+				{Typ: lexer.TokenError, Val: "unclosed expression"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Negative integer value",
+			input: "{{-123}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenInteger, Val: "-123"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "True value",
+			input: "{{true}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenBoolean, Val: "true"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "False value",
+			input: "{{false}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenBoolean, Val: "false"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Simple string literal",
+			input: `{{"some_string"}}`,
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenString, Val: `"some_string"`},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "String literal with whitespaces",
+			input: `{{"word1 word2  	word3"}}`,
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenString, Val: `"word1 word2  	word3"`},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "String literal with numbers and booleans",
+			input: `{{"123 false -22.0"}}`,
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenString, Val: `"123 false -22.0"`},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "float value",
+			input: "{{12.3}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenFloat, Val: "12.3"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Negative float value",
+			input: "{{-12.3}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenFloat, Val: "-12.3"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		// {
+		// 	name:  "Function",
+		// 	input: "{{ name -> upper }}",
+		// 	expectedTokens: []lexer.Token{
+		// 		{Typ: lexer.TokenLeftExpr, Val: "{{"},
+		// 		{Typ: lexer.TokenWhitespace, Val: " "},
+		// 		{Typ: lexer.TokenSymbol, Val: "name"},
+		// 		{Typ: lexer.TokenRightExpr, Val: "}}"},
+		// 		{Typ: lexer.TokenEOF, Val: ""},
+		// 	},
+		// },
 	}
 
 	for _, tc := range testCases {

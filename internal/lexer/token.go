@@ -19,6 +19,10 @@ const (
 	TokenWhitespace
 	TokenText
 	TokenSymbol
+	TokenInteger
+	TokenString
+	TokenBoolean
+	TokenFloat
 	TokenLeftExpr  // {{
 	TokenRightExpr // }}
 	TokenLeftComm  // {#
