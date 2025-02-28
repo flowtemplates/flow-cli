@@ -12,17 +12,17 @@ func (l *Lexer) StartsWith(s string) bool {
 }
 
 func lexText(l *Lexer) stateFn {
+	defer l.emit(TokenText)
 	for {
 		if l.StartsWith(LeftExpr) {
-			if l.start < l.pos {
-				l.emit(TokenText)
-			}
 			return lexLeftExpr
 		}
+
+		if l.StartsWith(LeftComm) {
+			return lexLeftComm
+		}
+
 		if l.next() == 0 {
-			if l.start < l.pos {
-				l.emit(TokenText)
-			}
 			return nil
 		}
 	}
@@ -46,6 +46,10 @@ func lexExpr(l *Lexer) stateFn {
 		return lexString
 	}
 
+	if l.StartsWith(RightExpr) {
+		return lexRightExpr
+	}
+
 	return l.errorf("unexpected EOF")
 }
 
@@ -58,7 +62,7 @@ func lexPositiveNum(l *Lexer) stateFn {
 			return lexFloatNumber
 		default:
 			l.emit(TokenInteger)
-			return lexWhitespace(lexRightExpr)
+			return lexWhitespace(lexPipelineOrRightExpr)
 		}
 	}
 }
@@ -73,34 +77,35 @@ func lexNegativeNum(l *Lexer) stateFn {
 			return lexFloatNumber
 		default:
 			l.emit(TokenInteger)
-			return lexWhitespace(lexRightExpr)
+			return lexWhitespace(lexPipelineOrRightExpr)
 		}
 	}
 }
 
 func lexFloatNumber(l *Lexer) stateFn {
-	l.next()
+	l.next() // skips dot
 	for {
-		switch r := l.peek(); {
-		case unicode.IsDigit(r):
-			l.next()
-		default:
+		r := l.peek()
+		if !unicode.IsDigit(r) {
 			l.emit(TokenFloat)
-			return lexWhitespace(lexRightExpr)
+			return lexWhitespace(lexPipelineOrRightExpr)
 		}
+
+		l.next()
 	}
 }
 
 func lexString(l *Lexer) stateFn {
-	l.next()
+	l.next() // skips starting "
 	for {
 		r := l.next()
 		if r == '"' || r == '\'' {
 			break
 		}
 	}
+
 	l.emit(TokenString)
-	return lexWhitespace(lexRightExpr)
+	return lexWhitespace(lexPipelineOrRightExpr)
 }
 
 func lexSymbolOrBoolean(l *Lexer) stateFn {
@@ -111,9 +116,9 @@ func lexSymbolOrBoolean(l *Lexer) stateFn {
 		default:
 			word := l.input[l.start:l.pos]
 
-			if word == "true" || word == "false" {
+			if word == FalseLiteral || word == TrueLiteral {
 				l.emit(TokenBoolean)
-				// check for other reserverd names
+				// TODO: check for other reserverd names
 			} else {
 				l.emit(TokenIdentifier)
 			}
@@ -130,7 +135,15 @@ func lexPipelineOrRightExpr(l *Lexer) stateFn {
 		return lexWhitespace(lexFilter)
 	}
 
-	return lexRightExpr(l)
+	if l.StartsWith(RightExpr) {
+		return lexRightExpr
+	}
+
+	if l.peek() == 0 {
+		return l.errorf("unexpected EOF")
+	}
+
+	return l.errorf("unclosed expression")
 }
 
 func lexFilter(l *Lexer) stateFn {
@@ -162,15 +175,34 @@ func lexLeftExpr(l *Lexer) stateFn {
 }
 
 func lexRightExpr(l *Lexer) stateFn {
-	if l.StartsWith(RightExpr) {
-		l.pos += len(RightExpr)
-		l.emit(TokenRightExpr)
-		return lexWhitespace(lexText)
-	}
+	l.pos += len(RightExpr)
+	l.emit(TokenRightExpr)
+	return lexWhitespace(lexText)
+}
 
-	if l.peek() == 0 {
-		return l.errorf("unexpected EOF")
-	}
+func lexLeftComm(l *Lexer) stateFn {
+	l.pos += len(LeftComm)
+	l.emit(TokenLeftComm)
+	return lexComm
+}
 
-	return l.errorf("unclosed expression")
+func lexRightComm(l *Lexer) stateFn {
+	l.pos += len(RightComm)
+	l.emit(TokenRightComm)
+	return lexWhitespace(lexText)
+}
+
+func lexComm(l *Lexer) stateFn {
+	for {
+		if l.peek() == 0 {
+			return l.errorf("unexpected EOF")
+		}
+
+		if l.StartsWith(RightComm) {
+			l.emit(TokenCommText)
+			return lexRightComm
+		}
+
+		l.next()
+	}
 }

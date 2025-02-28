@@ -11,7 +11,7 @@ lint:
 
 .PHONY: test
 test:
-	@gotestsum -f dots
+	@gotestsum -f testdox
 
 .PHONY: build
 build:

@@ -3,13 +3,15 @@ package lexer
 import "fmt"
 
 const (
-	RightExpr = "}}"
-	LeftExpr  = "{{"
-	LeftComm  = "{#"
-	RightComm = "#}"
-	LeftStmt  = "{%"
-	RightStmt = "%}"
-	Pipe      = "->"
+	FalseLiteral = "false"
+	TrueLiteral  = "true"
+	RightExpr    = "}}"
+	LeftExpr     = "{{"
+	LeftComm     = "{#"
+	RightComm    = "#}"
+	LeftStmt     = "{%"
+	RightStmt    = "%}"
+	Pipe         = "->"
 )
 
 type TokenType int
@@ -26,6 +28,7 @@ const (
 	TokenBoolean
 	TokenFloat
 	TokenPipe
+	TokenCommText
 	TokenLeftExpr  // {{
 	TokenRightExpr // }}
 	TokenLeftComm  // {#

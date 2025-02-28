@@ -51,6 +51,14 @@ func TestExpression(t *testing.T) {
 			},
 		},
 		{
+			name:  "Empty expression",
+			input: "{{}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		}, {
 			name:  "Simple expression",
 			input: "Hello, {{name}}!",
 			expectedTokens: []lexer.Token{
@@ -220,11 +228,33 @@ func TestStringLiterals(t *testing.T) {
 	// TODO: add tests for edge cases
 	testCases := []testCase{
 		{
-			name:  "Simple string literal",
-			input: `{{"some_string"}}`,
+			name:  "Simple string literal in double quotes",
+			input: `{{"double"}}`,
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenString, Val: `"some_string"`},
+				{Typ: lexer.TokenString, Val: `"double"`},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Simple string literal in single quotes",
+			input: `{{'single'}}`,
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenString, Val: `'single'`},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Empty string literal",
+			input: `{{ "" }}`,
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenWhitespace, Val: " "},
+				{Typ: lexer.TokenString, Val: `""`},
+				{Typ: lexer.TokenWhitespace, Val: " "},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenEOF, Val: ""},
 			},
@@ -336,6 +366,33 @@ func TestFilters(t *testing.T) {
 				{Typ: lexer.TokenFilter, Val: "camel"},
 				{Typ: lexer.TokenWhitespace, Val: " "},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+	}
+
+	runTestCases(t, testCases)
+}
+
+func TestComments(t *testing.T) {
+	// TODO: add tests for edge cases
+	testCases := []testCase{
+		{
+			name:  "Empty comment",
+			input: "{##}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftComm, Val: "{#"},
+				{Typ: lexer.TokenRightComm, Val: "#}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Single comment",
+			input: "{# no comments.. #}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftComm, Val: "{#"},
+				{Typ: lexer.TokenCommText, Val: ` no comments.. `},
+				{Typ: lexer.TokenRightComm, Val: "#}"},
 				{Typ: lexer.TokenEOF, Val: ""},
 			},
 		},
