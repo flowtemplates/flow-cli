@@ -30,18 +30,23 @@ func lexText(l *Lexer) stateFn {
 
 func lexExpr(l *Lexer) stateFn {
 	r := l.peek()
-	switch {
-	case unicode.IsLetter(r) || r == '$':
+	if unicode.IsLetter(r) || r == '$' || r == '_' {
 		return lexSymbolOrBoolean
-	case unicode.IsDigit(r):
-		return lexPositiveNum
-	case r == '-':
-		return lexNegativeNum
-	case r == '"':
-		return lexString
-	default:
-		return l.errorf("unexpected EOF")
 	}
+
+	if unicode.IsDigit(r) {
+		return lexPositiveNum
+	}
+
+	if r == '-' {
+		return lexNegativeNum
+	}
+
+	if r == '"' || r == '\'' {
+		return lexString
+	}
+
+	return l.errorf("unexpected EOF")
 }
 
 func lexPositiveNum(l *Lexer) stateFn {
@@ -90,7 +95,7 @@ func lexString(l *Lexer) stateFn {
 	l.next()
 	for {
 		r := l.next()
-		if r == '"' {
+		if r == '"' || r == '\'' {
 			break
 		}
 	}
@@ -110,9 +115,32 @@ func lexSymbolOrBoolean(l *Lexer) stateFn {
 				l.emit(TokenBoolean)
 				// check for other reserverd names
 			} else {
-				l.emit(TokenSymbol)
+				l.emit(TokenIdentifier)
 			}
-			return lexWhitespace(lexRightExpr)
+
+			return lexWhitespace(lexPipelineOrRightExpr)
+		}
+	}
+}
+
+func lexPipelineOrRightExpr(l *Lexer) stateFn {
+	if l.StartsWith(Pipe) {
+		l.pos += len(Pipe)
+		l.emit(TokenPipe)
+		return lexWhitespace(lexFilter)
+	}
+
+	return lexRightExpr(l)
+}
+
+func lexFilter(l *Lexer) stateFn {
+	for {
+		switch r := l.peek(); {
+		case unicode.IsLetter(r):
+			l.next()
+		default:
+			l.emit(TokenFilter)
+			return lexWhitespace(lexPipelineOrRightExpr)
 		}
 	}
 }

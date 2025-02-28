@@ -11,7 +11,7 @@ lint:
 
 .PHONY: test
 test:
-	@go test -v ./... | { grep -v 'no test files'; true; }
+	@gotestsum -f dots
 
 .PHONY: build
 build:

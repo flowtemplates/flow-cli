@@ -9,6 +9,7 @@ const (
 	RightComm = "#}"
 	LeftStmt  = "{%"
 	RightStmt = "%}"
+	Pipe      = "->"
 )
 
 type TokenType int
@@ -18,11 +19,13 @@ const (
 	TokenError
 	TokenWhitespace
 	TokenText
-	TokenSymbol
+	TokenIdentifier
+	TokenFilter
 	TokenInteger
 	TokenString
 	TokenBoolean
 	TokenFloat
+	TokenPipe
 	TokenLeftExpr  // {{
 	TokenRightExpr // }}
 	TokenLeftComm  // {#

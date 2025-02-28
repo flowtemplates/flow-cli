@@ -7,12 +7,34 @@ import (
 	"github.com/templatesflow/cli/internal/lexer"
 )
 
-func TestLexer(t *testing.T) {
-	testCases := []struct {
-		name           string
-		input          string
-		expectedTokens []lexer.Token
-	}{
+type testCase struct {
+	name           string
+	input          string
+	expectedTokens []lexer.Token
+}
+
+func runTestCases(t *testing.T, testCases []testCase) {
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			l := lexer.Lex(tc.input)
+			var tokens []lexer.Token
+			for {
+				tok := l.NextToken()
+				tokens = append(tokens, tok)
+				if tok.Typ == lexer.TokenEOF {
+					break
+				}
+			}
+			if !reflect.DeepEqual(tokens, tc.expectedTokens) {
+				t.Errorf("Test Case: %s\nExpected:\n%v\nGot:\n%v",
+					tc.name, tc.expectedTokens, tokens)
+			}
+		})
+	}
+}
+
+func TestExpression(t *testing.T) {
+	testCases := []testCase{
 		{
 			name:  "Empty input",
 			input: "",
@@ -34,7 +56,7 @@ func TestLexer(t *testing.T) {
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenText, Val: "Hello, "},
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenSymbol, Val: "name"},
+				{Typ: lexer.TokenIdentifier, Val: "name"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenText, Val: "!"},
 				{Typ: lexer.TokenEOF, Val: ""},
@@ -47,7 +69,7 @@ func TestLexer(t *testing.T) {
 				{Typ: lexer.TokenText, Val: "Hello, "},
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
 				{Typ: lexer.TokenWhitespace, Val: " "},
-				{Typ: lexer.TokenSymbol, Val: "name"},
+				{Typ: lexer.TokenIdentifier, Val: "name"},
 				{Typ: lexer.TokenWhitespace, Val: "\t\t"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenText, Val: "!"},
@@ -59,11 +81,11 @@ func TestLexer(t *testing.T) {
 			input: "{{greeting}}, {{name}}!",
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenSymbol, Val: "greeting"},
+				{Typ: lexer.TokenIdentifier, Val: "greeting"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenText, Val: ", "},
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenSymbol, Val: "name"},
+				{Typ: lexer.TokenIdentifier, Val: "name"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenText, Val: "!"},
 				{Typ: lexer.TokenEOF, Val: ""},
@@ -74,15 +96,15 @@ func TestLexer(t *testing.T) {
 			input: "{{GREETING}} {{user_name}} {{user123}}",
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenSymbol, Val: "GREETING"},
+				{Typ: lexer.TokenIdentifier, Val: "GREETING"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenWhitespace, Val: " "},
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenSymbol, Val: "user_name"},
+				{Typ: lexer.TokenIdentifier, Val: "user_name"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenWhitespace, Val: " "},
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenSymbol, Val: "user123"},
+				{Typ: lexer.TokenIdentifier, Val: "user123"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenEOF, Val: ""},
 			},
@@ -93,11 +115,11 @@ func TestLexer(t *testing.T) {
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenText, Val: "Hello, "},
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenSymbol, Val: "greeting"},
+				{Typ: lexer.TokenIdentifier, Val: "greeting"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenText, Val: ", "},
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenSymbol, Val: "name"},
+				{Typ: lexer.TokenIdentifier, Val: "name"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenText, Val: "! Welcome!"},
 				{Typ: lexer.TokenEOF, Val: ""},
@@ -109,7 +131,7 @@ func TestLexer(t *testing.T) {
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenText, Val: "Hello, "},
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenSymbol, Val: "name"},
+				{Typ: lexer.TokenIdentifier, Val: "name"},
 				{Typ: lexer.TokenError, Val: "unexpected EOF"},
 				{Typ: lexer.TokenEOF, Val: ""},
 			},
@@ -131,6 +153,14 @@ func TestLexer(t *testing.T) {
 				{Typ: lexer.TokenEOF, Val: ""},
 			},
 		},
+	}
+
+	runTestCases(t, testCases)
+}
+
+func TestNumLiterals(t *testing.T) {
+	// TODO: add tests for edge cases
+	testCases := []testCase{
 		{
 			name:  "Integer value",
 			input: "{{10}}",
@@ -162,25 +192,33 @@ func TestLexer(t *testing.T) {
 			},
 		},
 		{
-			name:  "True value",
-			input: "{{true}}",
+			name:  "float value",
+			input: "{{12.3}}",
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenBoolean, Val: "true"},
+				{Typ: lexer.TokenFloat, Val: "12.3"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenEOF, Val: ""},
 			},
 		},
 		{
-			name:  "False value",
-			input: "{{false}}",
+			name:  "Negative float value",
+			input: "{{-12.3}}",
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenBoolean, Val: "false"},
+				{Typ: lexer.TokenFloat, Val: "-12.3"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenEOF, Val: ""},
 			},
 		},
+	}
+
+	runTestCases(t, testCases)
+}
+
+func TestStringLiterals(t *testing.T) {
+	// TODO: add tests for edge cases
+	testCases := []testCase{
 		{
 			name:  "Simple string literal",
 			input: `{{"some_string"}}`,
@@ -212,53 +250,96 @@ func TestLexer(t *testing.T) {
 			},
 		},
 		{
-			name:  "float value",
-			input: "{{12.3}}",
+			name:  "Multiple strings",
+			input: `{{"123 falseasd" "bsdbq12 )_ asd" }}`,
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenFloat, Val: "12.3"},
+				{Typ: lexer.TokenString, Val: `"123 falseasd"`},
+				{Typ: lexer.TokenWhitespace, Val: " "},
+				{Typ: lexer.TokenError, Val: "unclosed expression"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+	}
+
+	runTestCases(t, testCases)
+}
+
+func TestBooleanLiterals(t *testing.T) {
+	// TODO: add tests for edge cases
+	testCases := []testCase{
+		{
+			name:  "True value",
+			input: "{{true}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenBoolean, Val: "true"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenEOF, Val: ""},
 			},
 		},
 		{
-			name:  "Negative float value",
-			input: "{{-12.3}}",
+			name:  "False value",
+			input: "{{false}}",
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenFloat, Val: "-12.3"},
+				{Typ: lexer.TokenBoolean, Val: "false"},
 				{Typ: lexer.TokenRightExpr, Val: "}}"},
 				{Typ: lexer.TokenEOF, Val: ""},
 			},
 		},
-		// {
-		// 	name:  "Function",
-		// 	input: "{{ name -> upper }}",
-		// 	expectedTokens: []lexer.Token{
-		// 		{Typ: lexer.TokenLeftExpr, Val: "{{"},
-		// 		{Typ: lexer.TokenWhitespace, Val: " "},
-		// 		{Typ: lexer.TokenSymbol, Val: "name"},
-		// 		{Typ: lexer.TokenRightExpr, Val: "}}"},
-		// 		{Typ: lexer.TokenEOF, Val: ""},
-		// 	},
-		// },
+		{
+			name:  "Multiple values",
+			input: "{{false  true }}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenBoolean, Val: "false"},
+				{Typ: lexer.TokenWhitespace, Val: "  "},
+				{Typ: lexer.TokenError, Val: "unclosed expression"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			l := lexer.Lex(tc.input)
-			var tokens []lexer.Token
-			for {
-				tok := l.NextToken()
-				tokens = append(tokens, tok)
-				if tok.Typ == lexer.TokenEOF {
-					break
-				}
-			}
-			if !reflect.DeepEqual(tokens, tc.expectedTokens) {
-				t.Errorf("Test Case: %s\nExpected:\n%v\nGot:\n%v",
-					tc.name, tc.expectedTokens, tokens)
-			}
-		})
+	runTestCases(t, testCases)
+}
+
+func TestFilters(t *testing.T) {
+	// TODO: add tests for edge cases
+	testCases := []testCase{
+		{
+			name:  "Simple filter",
+			input: "{{name->upper}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenIdentifier, Val: "name"},
+				{Typ: lexer.TokenPipe, Val: "->"},
+				{Typ: lexer.TokenFilter, Val: "upper"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Nested filters",
+			input: "{{ name -> upper -> camel }}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenWhitespace, Val: " "},
+				{Typ: lexer.TokenIdentifier, Val: "name"},
+				{Typ: lexer.TokenWhitespace, Val: " "},
+				{Typ: lexer.TokenPipe, Val: "->"},
+				{Typ: lexer.TokenWhitespace, Val: " "},
+				{Typ: lexer.TokenFilter, Val: "upper"},
+				{Typ: lexer.TokenWhitespace, Val: " "},
+				{Typ: lexer.TokenPipe, Val: "->"},
+				{Typ: lexer.TokenWhitespace, Val: " "},
+				{Typ: lexer.TokenFilter, Val: "camel"},
+				{Typ: lexer.TokenWhitespace, Val: " "},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
 	}
+
+	runTestCases(t, testCases)
 }
