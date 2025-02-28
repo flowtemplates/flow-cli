@@ -31,7 +31,7 @@ func lexText(l *Lexer) stateFn {
 func lexExpr(l *Lexer) stateFn {
 	r := l.peek()
 	if unicode.IsLetter(r) || r == '$' || r == '_' {
-		return lexSymbolOrBoolean
+		return lexIdentifierOrBoolean
 	}
 
 	if unicode.IsDigit(r) {
@@ -62,7 +62,7 @@ func lexPositiveNum(l *Lexer) stateFn {
 			return lexFloatNumber
 		default:
 			l.emit(TokenInteger)
-			return lexWhitespace(lexPipelineOrRightExpr)
+			return lexLineWhitespace(lexPipelineOrRightExpr)
 		}
 	}
 }
@@ -77,7 +77,7 @@ func lexNegativeNum(l *Lexer) stateFn {
 			return lexFloatNumber
 		default:
 			l.emit(TokenInteger)
-			return lexWhitespace(lexPipelineOrRightExpr)
+			return lexLineWhitespace(lexPipelineOrRightExpr)
 		}
 	}
 }
@@ -88,7 +88,7 @@ func lexFloatNumber(l *Lexer) stateFn {
 		r := l.peek()
 		if !unicode.IsDigit(r) {
 			l.emit(TokenFloat)
-			return lexWhitespace(lexPipelineOrRightExpr)
+			return lexLineWhitespace(lexPipelineOrRightExpr)
 		}
 
 		l.next()
@@ -96,7 +96,7 @@ func lexFloatNumber(l *Lexer) stateFn {
 }
 
 func lexString(l *Lexer) stateFn {
-	l.next() // skips starting "
+	l.next() // skips leading "
 	for {
 		r := l.next()
 		if r == '"' || r == '\'' {
@@ -105,10 +105,10 @@ func lexString(l *Lexer) stateFn {
 	}
 
 	l.emit(TokenString)
-	return lexWhitespace(lexPipelineOrRightExpr)
+	return lexLineWhitespace(lexPipelineOrRightExpr)
 }
 
-func lexSymbolOrBoolean(l *Lexer) stateFn {
+func lexIdentifierOrBoolean(l *Lexer) stateFn {
 	for {
 		switch r := l.peek(); {
 		case unicode.IsLetter(r) || unicode.IsDigit(r) || r == '_' || r == '$':
@@ -123,7 +123,7 @@ func lexSymbolOrBoolean(l *Lexer) stateFn {
 				l.emit(TokenIdentifier)
 			}
 
-			return lexWhitespace(lexPipelineOrRightExpr)
+			return lexLineWhitespace(lexPipelineOrRightExpr)
 		}
 	}
 }
@@ -132,7 +132,7 @@ func lexPipelineOrRightExpr(l *Lexer) stateFn {
 	if l.StartsWith(Pipe) {
 		l.pos += len(Pipe)
 		l.emit(TokenPipe)
-		return lexWhitespace(lexFilter)
+		return lexLineWhitespace(lexFilterIdentifier)
 	}
 
 	if l.StartsWith(RightExpr) {
@@ -146,38 +146,54 @@ func lexPipelineOrRightExpr(l *Lexer) stateFn {
 	return l.errorf("unclosed expression")
 }
 
-func lexFilter(l *Lexer) stateFn {
+func lexFilterIdentifier(l *Lexer) stateFn {
 	for {
 		switch r := l.peek(); {
 		case unicode.IsLetter(r):
 			l.next()
 		default:
-			l.emit(TokenFilter)
-			return lexWhitespace(lexPipelineOrRightExpr)
+			l.emit(TokenFilterIdentifier)
+			return lexLineWhitespace(lexPipelineOrRightExpr)
 		}
 	}
 }
 
-func lexWhitespace(nextState stateFn) stateFn {
+func lexLineWhitespace(nextState stateFn) stateFn {
 	return func(l *Lexer) stateFn {
-		for unicode.IsSpace(l.peek()) {
-			l.next()
+		for {
+			switch r := l.peek(); {
+			case r == ' ' || r == '\t':
+				l.next()
+			case unicode.IsSpace(r):
+				return l.errorf("line break")
+			default:
+				l.emit(TokenWhitespace)
+				return nextState
+			}
 		}
-		l.emit(TokenWhitespace)
-		return nextState
 	}
 }
+
+// func lexWhitespace(nextState stateFn) stateFn {
+// 	return func(l *Lexer) stateFn {
+// 		for unicode.IsSpace(l.peek()) {
+// 			l.next()
+// 		}
+// 		l.emit(TokenWhitespace)
+// 		return nextState
+// 	}
+// }
 
 func lexLeftExpr(l *Lexer) stateFn {
 	l.pos += len(LeftExpr)
 	l.emit(TokenLeftExpr)
-	return lexWhitespace(lexExpr)
+	return lexLineWhitespace(lexExpr)
 }
 
 func lexRightExpr(l *Lexer) stateFn {
 	l.pos += len(RightExpr)
 	l.emit(TokenRightExpr)
-	return lexWhitespace(lexText)
+	return lexText
 }
 
 func lexLeftComm(l *Lexer) stateFn {
@@ -189,7 +205,7 @@ func lexLeftComm(l *Lexer) stateFn {
 func lexRightComm(l *Lexer) stateFn {
 	l.pos += len(RightComm)
 	l.emit(TokenRightComm)
-	return lexWhitespace(lexText)
+	return lexText
 }
 
 func lexComm(l *Lexer) stateFn {

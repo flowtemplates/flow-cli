@@ -22,7 +22,7 @@ const (
 	TokenWhitespace
 	TokenText
 	TokenIdentifier
-	TokenFilter
+	TokenFilterIdentifier
 	TokenInteger
 	TokenString
 	TokenBoolean
