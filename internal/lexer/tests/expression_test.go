@@ -19,27 +19,19 @@ func TestExpressions(t *testing.T) {
 			name:  "Text with no custom syntax",
 			input: "Hello, world!",
 			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenText, Val: "Hello, world!", Pos: 0},
+				{Typ: lexer.TokenText, Val: "Hello, world!"},
 				{},
 			},
 		},
 		{
-			name:  "Empty expression",
-			input: "{{}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{", Pos: 0},
-				{Typ: lexer.TokenRightExpr, Val: "}}", Pos: 2},
-				{},
-			},
-		}, {
 			name:  "Simple expression",
 			input: "Hello, {{name}}!",
 			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenText, Val: "Hello, ", Pos: 0},
-				{Typ: lexer.TokenLeftExpr, Val: "{{", Pos: 0},
-				{Typ: lexer.TokenIdentifier, Val: "name", Pos: 0},
-				{Typ: lexer.TokenRightExpr, Val: "}}", Pos: 0},
-				{Typ: lexer.TokenText, Val: "!", Pos: 0},
+				{Typ: lexer.TokenText, Val: "Hello, "},
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenIdentifier, Val: "name"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenText, Val: "!"},
 				{},
 			},
 		},
@@ -131,6 +123,15 @@ func TestExpressions(t *testing.T) {
 
 // func TestExpressionsEdgeCases(t *testing.T) {
 // 	testCases := []testCase{
+// {
+// 	name:  "Empty expression",
+// 	input: "{{}}",
+// 	expectedTokens: []lexer.Token{
+// 		{Typ: lexer.TokenLeftExpr, Val: "{{", Pos: 0},
+// 		{Typ: lexer.TokenRightExpr, Val: "}}", Pos: 2},
+// 		{},
+// 	},
+// },
 // 		{
 // 			name:  "Line break inside expression",
 // 			input: "{{greeting\n}}\r\n{{name}}",

@@ -15,7 +15,7 @@ func TestComments(t *testing.T) {
 			expectedTokens: []lexer.Token{
 				{Typ: lexer.TokenLeftComm, Val: "{#"},
 				{Typ: lexer.TokenRightComm, Val: "#}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+				{},
 			},
 		},
 		{
@@ -25,7 +25,7 @@ func TestComments(t *testing.T) {
 				{Typ: lexer.TokenLeftComm, Val: "{#"},
 				{Typ: lexer.TokenCommText, Val: ` no comments.. `},
 				{Typ: lexer.TokenRightComm, Val: "#}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+				{},
 			},
 		},
 		{
@@ -35,7 +35,25 @@ func TestComments(t *testing.T) {
 				{Typ: lexer.TokenLeftComm, Val: "{#"},
 				{Typ: lexer.TokenCommText, Val: " line 1\nline 2\r\n\nline 3 "},
 				{Typ: lexer.TokenRightComm, Val: "#}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+				{},
+			},
+		},
+		{
+			name:  "Multiple comments",
+			input: "{# line 1 #}\n{# line 2 #}\n{# line 3 #}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftComm, Val: "{#"},
+				{Typ: lexer.TokenCommText, Val: " line 1 "},
+				{Typ: lexer.TokenRightComm, Val: "#}"},
+				{Typ: lexer.TokenText, Val: "\n"},
+				{Typ: lexer.TokenLeftComm, Val: "{#"},
+				{Typ: lexer.TokenCommText, Val: " line 2 "},
+				{Typ: lexer.TokenRightComm, Val: "#}"},
+				{Typ: lexer.TokenText, Val: "\n"},
+				{Typ: lexer.TokenLeftComm, Val: "{#"},
+				{Typ: lexer.TokenCommText, Val: " line 3 "},
+				{Typ: lexer.TokenRightComm, Val: "#}"},
+				{},
 			},
 		},
 	}

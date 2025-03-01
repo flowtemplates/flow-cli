@@ -5,6 +5,9 @@ import "fmt"
 const (
 	FalseLiteral = "false"
 	TrueLiteral  = "true"
+	IfStmt       = "if"
+	SwitchStmt   = "switch"
+	CaseStmt     = "case"
 	RightExpr    = "}}"
 	LeftExpr     = "{{"
 	LeftComm     = "{#"
@@ -29,6 +32,9 @@ const (
 	TokenFloat
 	TokenPipe
 	TokenCommText
+	TokenIfStmt
+	TokenSwitchStmt
+	TokenCaseStmt
 	TokenLeftExpr  // {{
 	TokenRightExpr // }}
 	TokenLeftComm  // {#
