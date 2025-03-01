@@ -20,6 +20,40 @@ func TestStatement(t *testing.T) {
 				{},
 			},
 		},
+		{
+			name:  "Simple switch statement",
+			input: "{%switch name%}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftStmt, Val: "{%"},
+				{Typ: lexer.TokenSwitchStmt, Val: "switch"},
+				{Typ: lexer.TokenWhitespace, Val: " "},
+				{Typ: lexer.TokenIdentifier, Val: "name"},
+				{Typ: lexer.TokenRightStmt, Val: "%}"},
+				{},
+			},
+		},
+		{
+			name:  "Simple case statement",
+			input: "{%case value%}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftStmt, Val: "{%"},
+				{Typ: lexer.TokenCaseStmt, Val: "case"},
+				{Typ: lexer.TokenWhitespace, Val: " "},
+				{Typ: lexer.TokenIdentifier, Val: "value"},
+				{Typ: lexer.TokenRightStmt, Val: "%}"},
+				{},
+			},
+		},
+		{
+			name:  "Simple default statement",
+			input: "{%default%}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftStmt, Val: "{%"},
+				{Typ: lexer.TokenDefaultStmt, Val: "default"},
+				{Typ: lexer.TokenRightStmt, Val: "%}"},
+				{},
+			},
+		},
 	}
 
 	runTestCases(t, testCases)

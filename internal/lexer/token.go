@@ -8,6 +8,7 @@ const (
 	IfStmt       = "if"
 	SwitchStmt   = "switch"
 	CaseStmt     = "case"
+	DefaultStmt  = "default"
 	RightExpr    = "}}"
 	LeftExpr     = "{{"
 	LeftComm     = "{#"
@@ -35,6 +36,7 @@ const (
 	TokenIfStmt
 	TokenSwitchStmt
 	TokenCaseStmt
+	TokenDefaultStmt
 	TokenLeftExpr  // {{
 	TokenRightExpr // }}
 	TokenLeftComm  // {#

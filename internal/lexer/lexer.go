@@ -30,18 +30,6 @@ func (l *Lexer) emit(t TokenType) {
 	}
 }
 
-// func (l *Lexer) emitError(err error) {
-// 	if l.start != l.pos {
-// 		l.tokens <- Token{
-// 			Typ: TokenError,
-// 			Val: l.input[l.start:l.pos],
-// 			Pos: l.start,
-// 			Err: err,
-// 		}
-// 		l.start = l.pos
-// 	}
-// }
-
 func (l *Lexer) NextToken() Token {
 	return <-l.tokens
 }

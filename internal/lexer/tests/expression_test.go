@@ -121,59 +121,57 @@ func TestExpressions(t *testing.T) {
 	runTestCases(t, testCases)
 }
 
-// func TestExpressionsEdgeCases(t *testing.T) {
-// 	testCases := []testCase{
-// {
-// 	name:  "Empty expression",
-// 	input: "{{}}",
-// 	expectedTokens: []lexer.Token{
-// 		{Typ: lexer.TokenLeftExpr, Val: "{{", Pos: 0},
-// 		{Typ: lexer.TokenRightExpr, Val: "}}", Pos: 2},
-// 		{},
-// 	},
-// },
-// 		{
-// 			name:  "Line break inside expression",
-// 			input: "{{greeting\n}}\r\n{{name}}",
-// 			expectedTokens: []lexer.Token{
-// 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-// 				{Typ: lexer.TokenIdentifier, Val: "greeting"},
-// 				{Typ: lexer.TokenError, Val: "line break"},
-// 				{Typ: lexer.TokenEOF, Val: ""},
-// 			},
-// 		},
-// 		{
-// 			name:  "Unclosed expression",
-// 			input: "Hello, {{name",
-// 			expectedTokens: []lexer.Token{
-// 				{Typ: lexer.TokenText, Val: "Hello, "},
-// 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-// 				{Typ: lexer.TokenIdentifier, Val: "name"},
-// 				{Typ: lexer.TokenError, Val: "unexpected EOF"},
-// 				{Typ: lexer.TokenEOF, Val: ""},
-// 			},
-// 		},
-// 		{
-// 			name:  "Only left expr",
-// 			input: "{{",
-// 			expectedTokens: []lexer.Token{
-// 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-// 				{Typ: lexer.TokenError, Val: "unexpected EOF"},
-// 				{Typ: lexer.TokenEOF, Val: ""},
-// 			},
-// 		},
-// 		{
-// 			name:  "Only right expr",
-// 			input: "}}",
-// 			expectedTokens: []lexer.Token{
-// 				{Typ: lexer.TokenText, Val: "}}"},
-// 				{Typ: lexer.TokenEOF, Val: ""},
-// 			},
-// 		},
-// 	}
-
-// 	runTestCases(t, testCases)
-// }
+func TestExpressionsEdgeCases(t *testing.T) {
+	testCases := []testCase{
+		{
+			name:  "Empty expression",
+			input: "{{}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{},
+			},
+		},
+		{
+			name:  "Line break inside expression",
+			input: "{{greeting\n}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenIdentifier, Val: "greeting"},
+				{Typ: lexer.TokenError, Val: "\n"},
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Unclosed expression",
+			input: "Hello, {{name",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenText, Val: "Hello, "},
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenIdentifier, Val: "name"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Only left expr",
+			input: "{{",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenLeftExpr, Val: "{{"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+		{
+			name:  "Only right expr",
+			input: "}}",
+			expectedTokens: []lexer.Token{
+				{Typ: lexer.TokenRightExpr, Val: "}}"},
+				{Typ: lexer.TokenEOF, Val: ""},
+			},
+		},
+	}
+	runTestCases(t, testCases)
+}
 
 func TestNumLiterals(t *testing.T) {
 	testCases := []testCase{

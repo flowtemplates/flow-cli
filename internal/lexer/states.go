@@ -26,6 +26,18 @@ func lexText(l *Lexer) stateFn {
 			return lexLeftComm
 		}
 
+		if l.StartsWith(RightExpr) {
+			return lexRightExpr
+		}
+
+		if l.StartsWith(RightStmt) {
+			return lexRightStmt
+		}
+
+		if l.StartsWith(RightComm) {
+			return lexRightComm
+		}
+
 		if l.next() == 0 {
 			return nil
 		}
@@ -35,7 +47,6 @@ func lexText(l *Lexer) stateFn {
 func lexExpr(l *Lexer) stateFn {
 	r := l.peek() // change to next
 	if r == 0 {
-		// l.emitError(ErrUnexpectedEOF)
 		return nil
 	}
 
@@ -116,20 +127,28 @@ func lexFloatNumber(l *Lexer) stateFn {
 
 func lexString(l *Lexer) stateFn {
 	if l.next() == 0 { // skips leading "
-		// l.emitError(ErrUnexpectedEOF)
 		return nil
 	}
 
 	for {
-		switch r := l.next(); {
-		case r == '"' || r == '\'':
-			l.emit(TokenString)
-			return lexLineWhitespace(lexPipelineOrRightExpr)
-		case r == 0:
-			// l.emitError(ErrUnexpectedEOF)
+		r := l.next()
+		if r == 0 {
 			return nil
 		}
+
+		if r == '"' || r == '\'' {
+			l.emit(TokenString)
+			return lexLineWhitespace(lexPipelineOrRightExpr)
+		}
 	}
+
+	// for r := l.next(); r != 0; {
+	// 	if r == '"' || r == '\'' {
+	// 		l.emit(TokenString)
+	// 		return lexLineWhitespace(lexPipelineOrRightExpr)
+	// 	}
+	// }
+	// return nil
 }
 
 func lexIdentifierOrBoolean(l *Lexer) stateFn {
@@ -153,6 +172,10 @@ func lexIdentifierOrBoolean(l *Lexer) stateFn {
 }
 
 func lexPipelineOrRightExpr(l *Lexer) stateFn {
+	if l.peek() == 0 {
+		return nil
+	}
+
 	if l.StartsWith(Pipe) {
 		l.pos += len(Pipe)
 		l.emit(TokenPipe)
@@ -167,12 +190,6 @@ func lexPipelineOrRightExpr(l *Lexer) stateFn {
 		return lexRightStmt
 	}
 
-	if l.peek() == 0 {
-		// l.emitError(ErrUnexpectedEOF)
-		return nil
-	}
-
-	// l.emitError(ErrUnexpected)
 	return lexText
 }
 
@@ -195,7 +212,8 @@ func lexLineWhitespace(nextState stateFn) stateFn {
 			case r == ' ' || r == '\t':
 				l.next()
 			case unicode.IsSpace(r):
-				// l.emitError(ErrUnclosedExpr)
+				l.next()
+				l.emit(TokenError)
 				return lexText
 			default:
 				l.emit(TokenWhitespace)
@@ -223,7 +241,19 @@ func lexStmt(l *Lexer) stateFn {
 	}
 
 	if l.StartsWith(IfStmt) {
-		return lexIfStmt
+		return lexIf
+	}
+
+	if l.StartsWith(SwitchStmt) {
+		return lexSwitch
+	}
+
+	if l.StartsWith(CaseStmt) {
+		return lexCase
+	}
+
+	if l.StartsWith(DefaultStmt) {
+		return lexDefault
 	}
 
 	if l.StartsWith(RightStmt) {
@@ -234,10 +264,28 @@ func lexStmt(l *Lexer) stateFn {
 	return nil
 }
 
-func lexIfStmt(l *Lexer) stateFn {
+func lexIf(l *Lexer) stateFn {
 	l.pos += len(IfStmt)
 	l.emit(TokenIfStmt)
 	return lexWhitespace(lexExpr)
+}
+
+func lexSwitch(l *Lexer) stateFn {
+	l.pos += len(SwitchStmt)
+	l.emit(TokenSwitchStmt)
+	return lexWhitespace(lexExpr)
+}
+
+func lexCase(l *Lexer) stateFn {
+	l.pos += len(CaseStmt)
+	l.emit(TokenCaseStmt)
+	return lexWhitespace(lexExpr)
+}
+
+func lexDefault(l *Lexer) stateFn {
+	l.pos += len(DefaultStmt)
+	l.emit(TokenDefaultStmt)
+	return lexWhitespace(lexRightStmt)
 }
 
 func lexLeftExpr(l *Lexer) stateFn {
