@@ -29,7 +29,12 @@ func lexText(l *Lexer) stateFn {
 }
 
 func lexExpr(l *Lexer) stateFn {
-	r := l.peek()
+	r := l.peek() // change to next
+	if r == 0 {
+		// l.emitError(ErrUnexpectedEOF)
+		return nil
+	}
+
 	if unicode.IsLetter(r) || r == '$' || r == '_' {
 		return lexIdentifierOrBoolean
 	}
@@ -50,7 +55,8 @@ func lexExpr(l *Lexer) stateFn {
 		return lexRightExpr
 	}
 
-	return l.errorf("unexpected EOF")
+	// l.emitError(ErrUnknown)
+	return nil
 }
 
 func lexPositiveNum(l *Lexer) stateFn {
@@ -85,27 +91,37 @@ func lexNegativeNum(l *Lexer) stateFn {
 func lexFloatNumber(l *Lexer) stateFn {
 	l.next() // skips dot
 	for {
-		r := l.peek()
-		if !unicode.IsDigit(r) {
+		switch r := l.peek(); {
+		case unicode.IsDigit(r):
+			l.next()
+		case r == '.':
+			l.emit(TokenFloat)
+			l.next()
+			// l.emitError(ErrUnexpected)
+			return lexLineWhitespace(lexExpr)
+		default:
 			l.emit(TokenFloat)
 			return lexLineWhitespace(lexPipelineOrRightExpr)
 		}
-
-		l.next()
 	}
 }
 
 func lexString(l *Lexer) stateFn {
-	l.next() // skips leading "
-	for {
-		r := l.next()
-		if r == '"' || r == '\'' {
-			break
-		}
+	if l.next() == 0 { // skips leading "
+		// l.emitError(ErrUnexpectedEOF)
+		return nil
 	}
 
-	l.emit(TokenString)
-	return lexLineWhitespace(lexPipelineOrRightExpr)
+	for {
+		switch r := l.next(); {
+		case r == '"' || r == '\'':
+			l.emit(TokenString)
+			return lexLineWhitespace(lexPipelineOrRightExpr)
+		case r == 0:
+			// l.emitError(ErrUnexpectedEOF)
+			return nil
+		}
+	}
 }
 
 func lexIdentifierOrBoolean(l *Lexer) stateFn {
@@ -140,10 +156,12 @@ func lexPipelineOrRightExpr(l *Lexer) stateFn {
 	}
 
 	if l.peek() == 0 {
-		return l.errorf("unexpected EOF")
+		// l.emitError(ErrUnexpectedEOF)
+		return nil
 	}
 
-	return l.errorf("unclosed expression")
+	// l.emitError(ErrUnexpected)
+	return lexText
 }
 
 func lexFilterIdentifier(l *Lexer) stateFn {
@@ -165,7 +183,8 @@ func lexLineWhitespace(nextState stateFn) stateFn {
 			case r == ' ' || r == '\t':
 				l.next()
 			case unicode.IsSpace(r):
-				return l.errorf("line break")
+				// l.emitError(ErrUnclosedExpr)
+				return lexText
 			default:
 				l.emit(TokenWhitespace)
 				return nextState
@@ -211,7 +230,8 @@ func lexRightComm(l *Lexer) stateFn {
 func lexComm(l *Lexer) stateFn {
 	for {
 		if l.peek() == 0 {
-			return l.errorf("unexpected EOF")
+			// l.emitError(ErrUnexpectedEOF)
+			return nil
 		}
 
 		if l.StartsWith(RightComm) {

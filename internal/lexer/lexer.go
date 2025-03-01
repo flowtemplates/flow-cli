@@ -1,7 +1,5 @@
 package lexer
 
-import "fmt"
-
 type Lexer struct {
 	input  string
 	start  int
@@ -21,33 +19,37 @@ func Lex(input string) *Lexer {
 	return l
 }
 
-func (l *Lexer) errorf(format string, args ...any) stateFn {
-	l.tokens <- Token{
-		Typ: TokenError,
-		Val: fmt.Sprintf(format, args...),
+func (l *Lexer) emit(t TokenType) {
+	if l.start != l.pos {
+		l.tokens <- Token{
+			Typ: t,
+			Val: l.input[l.start:l.pos],
+			Pos: l.start,
+		}
+		l.start = l.pos
 	}
-	l.pos = l.start
-	return nil
 }
+
+// func (l *Lexer) emitError(err error) {
+// 	if l.start != l.pos {
+// 		l.tokens <- Token{
+// 			Typ: TokenError,
+// 			Val: l.input[l.start:l.pos],
+// 			Pos: l.start,
+// 			Err: err,
+// 		}
+// 		l.start = l.pos
+// 	}
+// }
 
 func (l *Lexer) NextToken() Token {
 	return <-l.tokens
 }
 
 func (l *Lexer) run() {
+	defer close(l.tokens)
 	for state := lexText; state != nil; {
 		state = state(l)
-	}
-	close(l.tokens)
-}
-
-func (l *Lexer) emit(t TokenType) {
-	if l.start != l.pos {
-		l.tokens <- Token{
-			Typ: t,
-			Val: l.input[l.start:l.pos],
-		}
-		l.start = l.pos
 	}
 }
 

@@ -40,8 +40,9 @@ const (
 type Token struct {
 	Typ TokenType
 	Val string
+	Pos int
 }
 
 func (t Token) String() string {
-	return fmt.Sprintf("{Type: %v, Value: %q}", t.Typ, t.Val)
+	return fmt.Sprintf("{Type: %v, Value: %q, Pos: %d}", t.Typ, t.Val, t.Pos)
 }
