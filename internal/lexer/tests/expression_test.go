@@ -3,121 +3,138 @@ package lexer_test
 import (
 	"testing"
 
-	"github.com/templatesflow/cli/internal/lexer"
+	"github.com/templatesflow/cli/internal/token"
 )
 
 func TestExpressions(t *testing.T) {
 	testCases := []testCase{
 		{
-			name:  "Empty input",
-			input: "",
-			expectedTokens: []lexer.Token{
-				{},
-			},
+			name:           "Empty input",
+			input:          "",
+			expectedTokens: []token.Token{},
 		},
 		{
 			name:  "Text with no custom syntax",
 			input: "Hello, world!",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenText, Val: "Hello, world!"},
-				{},
+			expectedTokens: []token.Token{
+				{Typ: token.TEXT, Val: "Hello, world!"},
 			},
 		},
 		{
 			name:  "Simple expression",
-			input: "Hello, {{name}}!",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenText, Val: "Hello, "},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "name"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenText, Val: "!"},
-				{},
+			input: "{{name}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "Whitespaces inside expr",
-			input: "Hello, {{ name		}}!",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenText, Val: "Hello, "},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenWhitespace, Val: " "},
-				{Typ: lexer.TokenIdentifier, Val: "name"},
-				{Typ: lexer.TokenWhitespace, Val: "\t\t"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenText, Val: "!"},
-				{},
+			input: "{{ name		}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.WHITESPACE, Val: "		"},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "Multiple expressions",
-			input: "{{greeting}}, {{name}}!",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "greeting"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenText, Val: ", "},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "name"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenText, Val: "!"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			input: "{{greeting}}, {{name}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "greeting"},
+				{Typ: token.REXPR},
+				{Typ: token.TEXT, Val: ", "},
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.REXPR},
 			},
 		},
 		{
-			name:  "Var name underscores and digits",
-			input: "{{GREETING}} {{user_name}} {{user123}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "GREETING"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenText, Val: " "},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "user_name"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenText, Val: " "},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "user123"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			name:  "Var name with underscores",
+			input: "{{_user_name}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "_user_name"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Var name with digits",
+			input: "{{user123}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "user123"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Var name with leading dollar sign",
+			input: "{{$name}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "$name"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Var name with dollar sign",
+			input: "{{mirco$oft}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "mirco$oft"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Var name with non-latin symbols",
+			input: "{{こんにちは}} {{🙋}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "こんにちは"},
+				{Typ: token.REXPR},
+				{Typ: token.TEXT, Val: " "},
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "🙋"},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "Text before, after, and between expressions",
 			input: "Hello, {{greeting}}, {{name}}! Welcome!",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenText, Val: "Hello, "},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "greeting"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenText, Val: ", "},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "name"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenText, Val: "! Welcome!"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.TEXT, Val: "Hello, "},
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "greeting"},
+				{Typ: token.REXPR},
+				{Typ: token.TEXT, Val: ", "},
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.REXPR},
+				{Typ: token.TEXT, Val: "! Welcome!"},
 			},
 		},
 		{
 			name:  "Multiline input with several blocks",
 			input: "Hello,\n {{greeting}}\r\n{{name}}{{surname}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenText, Val: "Hello,\n "},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "greeting"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenText, Val: "\r\n"},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "name"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "surname"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.TEXT, Val: "Hello,\n "},
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "greeting"},
+				{Typ: token.REXPR},
+				{Typ: token.TEXT, Val: "\r\n"},
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.REXPR},
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "surname"},
+				{Typ: token.REXPR},
 			},
 		},
 	}
-
 	runTestCases(t, testCases)
 }
 
@@ -126,47 +143,41 @@ func TestExpressionsEdgeCases(t *testing.T) {
 		{
 			name:  "Empty expression",
 			input: "{{}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "Line break inside expression",
 			input: "{{greeting\n}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "greeting"},
-				{Typ: lexer.TokenError, Val: "\n"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "greeting"},
+				{Typ: token.TEXT, Val: "\n}}"},
 			},
 		},
 		{
 			name:  "Unclosed expression",
 			input: "Hello, {{name",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenText, Val: "Hello, "},
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "name"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.TEXT, Val: "Hello, "},
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "name"},
 			},
 		},
 		{
 			name:  "Only left expr",
 			input: "{{",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
 			},
 		},
 		{
 			name:  "Only right expr",
 			input: "}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.TEXT, Val: "}}"},
 			},
 		},
 	}
@@ -178,257 +189,430 @@ func TestNumLiterals(t *testing.T) {
 		{
 			name:  "Integer value",
 			input: "{{10}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenInteger, Val: "10"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.INT, Val: "10"},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "Negative integer value",
 			input: "{{-123}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenInteger, Val: "-123"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.SUB, Val: "-"},
+				{Typ: token.INT, Val: "123"},
+				{Typ: token.REXPR},
 			},
 		},
 		{
-			name:  "float value",
+			name:  "Float value",
 			input: "{{12.3}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenFloat, Val: "12.3"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.FLOAT, Val: "12.3"},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "Negative float value",
 			input: "{{-12.3}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenFloat, Val: "-12.3"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.SUB, Val: "-"},
+				{Typ: token.FLOAT, Val: "12.3"},
+				{Typ: token.REXPR},
 			},
 		},
 	}
-
 	runTestCases(t, testCases)
 }
 
-// func TestNumLiteralsEdgeCases(t *testing.T) {
-// 	// TODO: add tests for edge cases
-// 	testCases := []testCase{
-// 		{
-// 			name:  "Integer value with unclosed expression",
-// 			input: "{{10} text",
-// 			expectedTokens: []lexer.Token{
-// 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-// 				{Typ: lexer.TokenInteger, Val: "10"},
-// 				{Typ: lexer.TokenError, Val: "unclosed expression"},
-// 				{Typ: lexer.TokenEOF, Val: ""},
-// 			},
-// 		},
-// 		{
-// 			name:  "Multiple dots in float value",
-// 			input: "{{-12.3.2}}",
-// 			expectedTokens: []lexer.Token{
-// 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-// 				{Typ: lexer.TokenFloat, Val: "-12.3"},
-// 				{Typ: lexer.TokenError, Val: "unexpected point after float"},
-// 				{Typ: lexer.TokenEOF, Val: ""},
-// 			},
-// 		},
-// 	}
+func TestOperations(t *testing.T) {
+	testCases := []testCase{
+		{
+			name:  "Addittion",
+			input: "{{seconds+1}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "seconds"},
+				{Typ: token.ADD},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Subtraction",
+			input: "{{age-123.2}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.SUB},
+				{Typ: token.FLOAT, Val: "123.2"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Negative number subtraction",
+			input: "{{age- -123.2}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.SUB},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.SUB},
+				{Typ: token.FLOAT, Val: "123.2"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Multiply",
+			input: "{{age*30}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.MUL},
+				{Typ: token.INT, Val: "30"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Multiply by negative number",
+			input: "{{age*-30}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.MUL},
+				{Typ: token.SUB},
+				{Typ: token.INT, Val: "30"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Multiply by negative number",
+			input: "{{age*-30}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.MUL},
+				{Typ: token.SUB},
+				{Typ: token.INT, Val: "30"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Division",
+			input: "{{age/30}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.DIV},
+				{Typ: token.INT, Val: "30"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Division by negative number",
+			input: "{{age/-30}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.DIV},
+				{Typ: token.SUB},
+				{Typ: token.INT, Val: "30"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Single parens",
+			input: "{{(12/2)+age}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.LPAREN},
+				{Typ: token.INT, Val: "12"},
+				{Typ: token.DIV},
+				{Typ: token.INT, Val: "2"},
+				{Typ: token.RPAREN},
+				{Typ: token.ADD},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Two operations with parens",
+			input: "{{(age/-30)+(12-2.2)}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.LPAREN},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.DIV},
+				{Typ: token.SUB},
+				{Typ: token.INT, Val: "30"},
+				{Typ: token.RPAREN},
+				{Typ: token.ADD},
+				{Typ: token.LPAREN},
+				{Typ: token.INT, Val: "12"},
+				{Typ: token.SUB},
+				{Typ: token.FLOAT, Val: "2.2"},
+				{Typ: token.RPAREN},
+				{Typ: token.REXPR},
+			},
+		},
+	}
+	runTestCases(t, testCases)
+}
 
-// 	runTestCases(t, testCases)
-// }
+func TestOperationsEdgeCases(t *testing.T) {
+	testCases := []testCase{
+		{
+			name:  "Unclosed addition",
+			input: "{{1+}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.ADD},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Unclosed expression with addition",
+			input: "{{1+",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.ADD},
+			},
+		},
+	}
+	runTestCases(t, testCases)
+}
+
+func TestNumLiteralsEdgeCases(t *testing.T) {
+	testCases := []testCase{
+		{
+			name:  "Integer value with unclosed expression",
+			input: "{{10} name",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.INT, Val: "10"},
+				{Typ: token.EXPECTED_EXPR, Val: "}"},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.IDENT, Val: "name"},
+			},
+		},
+		{
+			name:  "Multiple points in float value",
+			input: "{{-12.3.2}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.SUB, Val: "-"},
+				{Typ: token.FLOAT, Val: "12.3"},
+				{Typ: token.EXPECTED_EXPR, Val: "."},
+				{Typ: token.INT, Val: "2"},
+				{Typ: token.REXPR},
+			},
+		},
+	}
+	runTestCases(t, testCases)
+}
 
 func TestStringLiterals(t *testing.T) {
 	testCases := []testCase{
 		{
 			name:  "Simple string literal in double quotes",
 			input: `{{"double"}}`,
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenString, Val: `"double"`},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.STR, Val: `"double"`},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "Simple string literal in single quotes",
 			input: `{{'single'}}`,
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenString, Val: `'single'`},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.STR, Val: `'single'`},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "Empty string literal",
-			input: `{{ "" }}`,
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenWhitespace, Val: " "},
-				{Typ: lexer.TokenString, Val: `""`},
-				{Typ: lexer.TokenWhitespace, Val: " "},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			input: `{{""}}`,
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.STR, Val: `""`},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "String literal with whitespaces",
 			input: `{{"word1 word2  	word3"}}`,
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenString, Val: `"word1 word2  	word3"`},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.STR, Val: `"word1 word2  	word3"`},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "String literal with numbers and booleans",
 			input: `{{"123 false -22.0"}}`,
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenString, Val: `"123 false -22.0"`},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.STR, Val: `"123 false -22.0"`},
+				{Typ: token.REXPR},
 			},
 		},
 	}
-
 	runTestCases(t, testCases)
 }
 
-// func TestStringLiteralsEdgeCases(t *testing.T) {
-// 	// TODO: add tests for edge cases
-// 	testCases := []testCase{
-// 		{
-// 			name:  "String literal with unclosed expression",
-// 			input: `{{"double"`,
-// 			expectedTokens: []lexer.Token{
-// 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-// 				{Typ: lexer.TokenString, Val: `"double"`},
-// 				{Typ: lexer.TokenRightExpr, Val: "}}"},
-// 				{Typ: lexer.TokenEOF, Val: ""},
-// 			},
-// 		},
-// 		{
-// 			name:  "String literal unclosed quotes",
-// 			input: `{{"asd}}`,
-// 			expectedTokens: []lexer.Token{
-// 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-// 				{Typ: lexer.TokenString, Val: `"123 falseasd"`},
-// 				{Typ: lexer.TokenWhitespace, Val: " "},
-// 				{Typ: lexer.TokenError, Val: "unclosed expression"},
-// 				{Typ: lexer.TokenEOF, Val: ""},
-// 			},
-// 		},
-// {
-// 	name:  "Multiple strings",
-// 	input: `{{"123 falseasd" "bsdbq12 )_ asd" }}`,
-// 	expectedTokens: []lexer.Token{
-// 		{Typ: lexer.TokenLeftExpr, Val: "{{"},
-// 		{Typ: lexer.TokenString, Val: `"123 falseasd"`},
-// 		{Typ: lexer.TokenWhitespace, Val: " "},
-// 		{Typ: lexer.TokenError, Val: "unclosed expression"},
-// 		{Typ: lexer.TokenEOF, Val: ""},
-// 	},
-// },
-// 	}
-
-// 	runTestCases(t, testCases)
-// }
-
-func TestBooleanLiterals(t *testing.T) {
+func TestStringLiteralsEdgeCases(t *testing.T) {
 	testCases := []testCase{
 		{
-			name:  "True value",
-			input: "{{true}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenBoolean, Val: "true"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			name:  "String not terminated",
+			input: `{{"double`,
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.NOT_TERMINATED_STR, Val: `"double`},
 			},
 		},
 		{
-			name:  "False value",
-			input: "{{false}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenBoolean, Val: "false"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			name:  "Multiple strings",
+			input: `{{"123 falseasd" 'bsdbq12 )_ asd' }}`,
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.STR, Val: `"123 falseasd"`},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.STR, Val: `'bsdbq12 )_ asd'`},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.REXPR},
 			},
 		},
 	}
-
 	runTestCases(t, testCases)
 }
 
-// func TestBooleanLiteralsEdgeCases(t *testing.T) {
-// 	// TODO: add tests for edge cases
-// 	testCases := []testCase{
-// 		{
-// 			name:  "Multiple values",
-// 			input: "{{false  true }}",
-// 			expectedTokens: []lexer.Token{
-// 				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-// 				{Typ: lexer.TokenBoolean, Val: "false"},
-// 				{Typ: lexer.TokenWhitespace, Val: "  "},
-// 				{Typ: lexer.TokenError, Val: "unclosed expression"},
-// 				{Typ: lexer.TokenEOF, Val: ""},
-// 			},
-// 		},
-// 	}
-
-// 	runTestCases(t, testCases)
-// }
-
 func TestFilters(t *testing.T) {
-	// TODO: add tests for edge cases
 	testCases := []testCase{
 		{
 			name:  "Simple filter",
 			input: "{{name->upper}}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenIdentifier, Val: "name"},
-				{Typ: lexer.TokenPipe, Val: "->"},
-				{Typ: lexer.TokenFilterIdentifier, Val: "upper"},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.RARR},
+				{Typ: token.IDENT, Val: "upper"},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "Nested filters",
-			input: "{{ name -> upper -> camel }}",
-			expectedTokens: []lexer.Token{
-				{Typ: lexer.TokenLeftExpr, Val: "{{"},
-				{Typ: lexer.TokenWhitespace, Val: " "},
-				{Typ: lexer.TokenIdentifier, Val: "name"},
-				{Typ: lexer.TokenWhitespace, Val: " "},
-				{Typ: lexer.TokenPipe, Val: "->"},
-				{Typ: lexer.TokenWhitespace, Val: " "},
-				{Typ: lexer.TokenFilterIdentifier, Val: "upper"},
-				{Typ: lexer.TokenWhitespace, Val: " "},
-				{Typ: lexer.TokenPipe, Val: "->"},
-				{Typ: lexer.TokenWhitespace, Val: " "},
-				{Typ: lexer.TokenFilterIdentifier, Val: "camel"},
-				{Typ: lexer.TokenWhitespace, Val: " "},
-				{Typ: lexer.TokenRightExpr, Val: "}}"},
-				{Typ: lexer.TokenEOF, Val: ""},
+			input: "{{name -> upper -> camel}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.RARR},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.IDENT, Val: "upper"},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.RARR},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.IDENT, Val: "camel"},
+				{Typ: token.REXPR},
 			},
 		},
 	}
+	runTestCases(t, testCases)
+}
 
+func TestFiltersEdgeCases(t *testing.T) {
+	testCases := []testCase{
+		{
+			name:  "Empty filter",
+			input: "{{name->}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.RARR},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Filter in expression",
+			input: "{{name->upper=='UP'}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.RARR},
+				{Typ: token.IDENT, Val: "upper"},
+				{Typ: token.EQL},
+				{Typ: token.STR, Val: "'UP'"},
+				{Typ: token.REXPR},
+			},
+		},
+	}
+	runTestCases(t, testCases)
+}
+
+func TestOperators(t *testing.T) {
+	testCases := []testCase{
+		{
+			name:  "Equal",
+			input: "{{age==3}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.EQL},
+				{Typ: token.INT, Val: "3"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Is",
+			input: "{{age is 3}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.IS},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.INT, Val: "3"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Excl",
+			input: "{{!flag}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.EXCL},
+				{Typ: token.IDENT, Val: "flag"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Excl",
+			input: "{{!flag}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.EXCL},
+				{Typ: token.IDENT, Val: "flag"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Not",
+			input: "{{not flag}}",
+			expectedTokens: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.NOT},
+				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.IDENT, Val: "flag"},
+				{Typ: token.REXPR},
+			},
+		},
+	}
 	runTestCases(t, testCases)
 }

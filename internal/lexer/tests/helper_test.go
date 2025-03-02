@@ -6,23 +6,31 @@ import (
 	"testing"
 
 	"github.com/templatesflow/cli/internal/lexer"
+	"github.com/templatesflow/cli/internal/token"
 )
 
-func equal(tokens1 []lexer.Token, tokens2 []lexer.Token) error {
-	l := len(tokens1)
-	if l != len(tokens2) {
+func equal(gotTokens []token.Token, expectedTokens []token.Token) error {
+	l := len(gotTokens)
+	if l != len(expectedTokens) {
 		return errors.New("not matching length")
 	}
 
 	for i := range l {
-		t1, t2 := tokens1[i], tokens2[i]
+		got, expected := gotTokens[i], expectedTokens[i]
 
-		if t1.Typ != t2.Typ {
-			return fmt.Errorf("wrong type: expected %d, got %d", t1.Typ, t2.Typ)
+		if got.Typ != expected.Typ {
+			return fmt.Errorf("wrong type: expected %s, got %s", got.Typ, expected.Typ)
 		}
 
-		if t1.Val != t2.Val {
-			return fmt.Errorf("wrong value: expected %s, got %s", t1.Val, t2.Val)
+		var expectedValue string
+		if expected.IsValueable() {
+			expectedValue = expected.Val
+		} else {
+			expectedValue = token.TokenString(expected.Typ)
+		}
+
+		if got.Val != expectedValue {
+			return fmt.Errorf("wrong value: expected %q, got %q", got.Val, expectedValue)
 		}
 	}
 
@@ -32,20 +40,20 @@ func equal(tokens1 []lexer.Token, tokens2 []lexer.Token) error {
 type testCase struct {
 	name           string
 	input          string
-	expectedTokens []lexer.Token
+	expectedTokens []token.Token
 }
 
 func runTestCases(t *testing.T, testCases []testCase) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			l := lexer.Lex(tc.input)
-			var tokens []lexer.Token
+			var tokens []token.Token
 			for {
 				tok := l.NextToken()
-				tokens = append(tokens, tok)
-				if tok.Typ == lexer.TokenEOF {
+				if tok.Typ == token.EOF {
 					break
 				}
+				tokens = append(tokens, tok)
 			}
 			if err := equal(tokens, tc.expectedTokens); err != nil {
 				t.Errorf("%s\nTest Case: %s\nExpected:\n%v\nGot:\n%v",

@@ -73,6 +73,7 @@ linters-settings:
     check:
       - switch
       - map
+    default-signifies-exhaustive: true
   exhaustruct:
     # List of regular expressions to exclude struct packages and their names from checks.
     # Regular expressions must match complete canonical struct package/name/structname.
@@ -105,12 +106,6 @@ linters-settings:
     # Presence of `default` case in switch statements satisfies exhaustiveness, if all members are not listed.
     # Default: true
     default-signifies-exhaustive: false
-  godot:
-    exclude:
-      # Exclude todo and fixme comments.
-      - "(?i)fixme:"
-      - "(?i)todo:"
-      - "@Router"
   gocognit:
     # Minimal code complexity to report.
     min-complexity: 30
@@ -193,8 +188,8 @@ linters-settings:
     # - "": disabled
     # - "all": report all global loggers
     # - "default": report only the default slog logger
-    # https://github.com/go-simpler/sloglint?tab=readme-ov-file#no-global
     # Default: ""
+    # https://github.com/go-simpler/sloglint?tab=readme-ov-file#no-global
     no-global: "all"
     # Enforce using methods that accept a context.
     # Values:
@@ -249,7 +244,7 @@ linters:
     - goconst # finds repeated strings that could be replaced by a constant
     - gocritic # provides diagnostics that check for bugs, performance and style issues
     - gocyclo # computes and checks the cyclomatic complexity of functions
-    - godot # checks if comments end in a period
+    # - godot # checks if comments end in a period
     - goimports # in addition to fixing imports, goimports also formats your code in the same style as gofmt
     - gomoddirectives # manages the use of 'replace', 'retract', and 'excludes' directives in go.mod
     - goprintffuncname # checks that printf-like functions are named with f at the end
@@ -339,6 +334,12 @@ issues:
     - path: "internal/repository"
       linters:
         - wrapcheck
+    - text: "ST1003: should not use ALL_CAPS in Go names"
+      linters:
+        - stylecheck
+    - text: "ST1003: should not use underscores in Go names"
+      linters:
+        - stylecheck
     - path: "_test\\.go"
       linters:
         - bodyclose
