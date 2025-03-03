@@ -211,7 +211,7 @@ func lexLineWhitespace(nextState stateFn) stateFn {
 				l.next()
 				return lexText
 			default:
-				l.emit(token.WHITESPACE)
+				l.emit(token.WS)
 				return nextState
 			}
 		}
@@ -229,6 +229,7 @@ func lexStmt(l *Lexer) stateFn {
 		token.SWITCH,
 		token.CASE,
 		token.DEFAULT,
+		token.END,
 		token.EQL,
 		token.NEQL,
 		token.IS,

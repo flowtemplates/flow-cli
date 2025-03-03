@@ -13,7 +13,7 @@ type Lexer struct {
 	tokens chan token.Token
 }
 
-func Lex(input string) *Lexer {
+func LexString(input string) *Lexer {
 	l := &Lexer{
 		input:  input,
 		start:  0,
@@ -25,19 +25,15 @@ func Lex(input string) *Lexer {
 	return l
 }
 
-func (l *Lexer) emit(t token.Type) string {
-	var s string
+func (l *Lexer) emit(t token.Type) {
 	if l.start < l.pos {
-		s = l.input[l.start:l.pos]
 		l.tokens <- token.Token{
 			Typ: t,
-			Val: s,
+			Val: l.input[l.start:l.pos],
 			Pos: l.start,
 		}
 		l.start = l.pos
 	}
-
-	return s
 }
 
 func (l *Lexer) NextToken() token.Token {
@@ -45,19 +41,19 @@ func (l *Lexer) NextToken() token.Token {
 }
 
 func (l *Lexer) run() {
-	defer close(l.tokens)
 	for state := lexText; state != nil; {
 		state = state(l)
 	}
+	close(l.tokens)
 }
 
 func (l *Lexer) next() rune {
-	if l.pos >= len(l.input) {
-		return eof
+	if l.pos < len(l.input) {
+		r := rune(l.input[l.pos])
+		l.pos++
+		return r
 	}
-	r := rune(l.input[l.pos])
-	l.pos++
-	return r
+	return eof
 }
 
 func (l *Lexer) back() {
@@ -65,9 +61,11 @@ func (l *Lexer) back() {
 }
 
 func (l *Lexer) peek() rune {
-	r := l.next()
-	l.back()
-	return r
+	if l.pos < len(l.input) {
+		r := rune(l.input[l.pos])
+		return r
+	}
+	return eof
 }
 
 func (l *Lexer) accept(valid string) bool {

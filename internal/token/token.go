@@ -2,6 +2,7 @@ package token
 
 import (
 	"fmt"
+	"slices"
 )
 
 type Type int
@@ -10,6 +11,12 @@ func (t Type) String() string {
 	return TokenString(t)
 }
 
+// func (t Type) MarshalJSON() ([]byte, error) {
+// 	s := TokenString(t)
+// 	fmt.Println(s)
+// 	return []byte(s), nil
+// }
+
 const (
 	EOF Type = iota
 	ILLEGAL
@@ -17,7 +24,7 @@ const (
 	valueable_beg
 	COMM_TEXT
 	TEXT
-	WHITESPACE
+	WS
 
 	IDENT // main
 	INT   // 12345
@@ -86,6 +93,7 @@ const (
 	IF      // if
 	ELSE    // else
 	SWITCH  // switch
+	END     // end
 	CASE    // case
 	DEFAULT // default
 	EXTEND  // extend
@@ -101,9 +109,9 @@ var tokens = []string{
 	EOF:     "EOF",
 	ILLEGAL: "ILLEGAL",
 
-	COMM_TEXT:  "COMMENT",
-	TEXT:       "TEXT",
-	WHITESPACE: "WHITESPACE",
+	COMM_TEXT: "COMMENT",
+	TEXT:      "TEXT",
+	WS:        "WHITESPACE",
 
 	IDENT: "IDENT",
 	INT:   "INT",
@@ -163,6 +171,7 @@ var tokens = []string{
 	IF:      "if",
 	ELSE:    "else",
 	SWITCH:  "switch",
+	END:     "end",
 	CASE:    "case",
 	DEFAULT: "default",
 	EXTEND:  "extend",
@@ -206,6 +215,10 @@ func (t Token) String() string {
 	}
 
 	return fmt.Sprintf("{Typ: %[1]s, Val: %[1]q}", TokenString(t.Typ))
+}
+
+func (t Token) IsOneOfMany(types ...Type) bool {
+	return slices.Contains(types, t.Typ)
 }
 
 func IsNotOp(r rune) bool {

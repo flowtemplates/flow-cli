@@ -14,7 +14,7 @@ func TestStatement(t *testing.T) {
 			expectedTokens: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.IF},
-				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.WS, Val: " "},
 				{Typ: token.IDENT, Val: "name"},
 				{Typ: token.RSTMT},
 			},
@@ -25,7 +25,7 @@ func TestStatement(t *testing.T) {
 			expectedTokens: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.SWITCH},
-				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.WS, Val: " "},
 				{Typ: token.IDENT, Val: "name"},
 				{Typ: token.RSTMT},
 			},
@@ -36,7 +36,7 @@ func TestStatement(t *testing.T) {
 			expectedTokens: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.CASE},
-				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.WS, Val: " "},
 				{Typ: token.IDENT, Val: "value"},
 				{Typ: token.RSTMT},
 			},
@@ -46,7 +46,16 @@ func TestStatement(t *testing.T) {
 			input: "{%default%}",
 			expectedTokens: []token.Token{
 				{Typ: token.LSTMT},
-				{Typ: token.DEFAULT, Val: "default"},
+				{Typ: token.DEFAULT},
+				{Typ: token.RSTMT},
+			},
+		},
+		{
+			name:  "Simple end statement",
+			input: "{%end%}",
+			expectedTokens: []token.Token{
+				{Typ: token.LSTMT},
+				{Typ: token.END},
 				{Typ: token.RSTMT},
 			},
 		},
@@ -56,7 +65,7 @@ func TestStatement(t *testing.T) {
 			expectedTokens: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.IF},
-				{Typ: token.WHITESPACE, Val: " "},
+				{Typ: token.WS, Val: " "},
 				{Typ: token.IDENT, Val: "name"},
 				{Typ: token.EQL},
 				{Typ: token.INT, Val: "3"},
