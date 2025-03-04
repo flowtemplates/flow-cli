@@ -4,7 +4,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/templatesflow/cli/internal/token"
+	"github.com/templatesflow/cli/pkg/token"
 )
 
 type stateFn func(*Lexer) stateFn

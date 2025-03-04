@@ -3,11 +3,11 @@ package parser_test
 import (
 	"testing"
 
-	"github.com/templatesflow/cli/internal/parser"
-	"github.com/templatesflow/cli/internal/token"
+	"github.com/templatesflow/cli/pkg/parser"
+	"github.com/templatesflow/cli/pkg/token"
 )
 
-func TestParser(t *testing.T) {
+func TestExpressions(t *testing.T) {
 	testCases := []testCase{
 		{
 			name: "Plain text",
@@ -371,6 +371,148 @@ func TestParser(t *testing.T) {
 						},
 					},
 					RBrace: 0,
+				},
+			},
+		},
+	}
+	runTestCases(t, testCases)
+}
+
+func TestStatements(t *testing.T) {
+	testCases := []testCase{
+		{
+			name: "If statement",
+			str:  "{%if var%}\ntext\n{%end%}",
+			input: []token.Token{
+				{Typ: token.LSTMT},
+				{Typ: token.IF},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.RSTMT},
+				{Typ: token.TEXT, Val: "\ntext\n"},
+				{Typ: token.LSTMT},
+				{Typ: token.END},
+				{Typ: token.RSTMT},
+			},
+			expected: []parser.Node{
+				parser.IfStmt{
+					StmtBeg:  0,
+					IfPos:    0,
+					PostIfWs: " ",
+					Condition: parser.Ident{
+						Pos:    0,
+						Name:   "var",
+						PostWS: "",
+					},
+					Body: []parser.Node{
+						parser.Text{
+							Pos: 0,
+							Val: "\ntext\n",
+						},
+					},
+					Else:    nil,
+					StmtEnd: 0,
+				},
+			},
+		},
+		{
+			name: "If statement (with whitespaces)",
+			str:  "{% if var  %}text{% end %}",
+			input: []token.Token{
+				{Typ: token.LSTMT},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IF},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.WS, Val: "  "},
+				{Typ: token.RSTMT},
+				{Typ: token.TEXT, Val: "text"},
+				{Typ: token.LSTMT},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.END},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.RSTMT},
+			},
+			expected: []parser.Node{
+				parser.IfStmt{
+					StmtBeg:    0,
+					PostStmtWs: " ",
+					IfPos:      0,
+					PostIfWs:   " ",
+					Condition: parser.Ident{
+						Pos:    0,
+						Name:   "var",
+						PostWS: "  ",
+					},
+					Body: []parser.Node{
+						parser.Text{
+							Pos: 0,
+							Val: "text",
+						},
+					},
+					Else:    nil,
+					StmtEnd: 0,
+				},
+			},
+		},
+		{
+			name: "Nested if statements",
+			str:  "{%if var%}1{%if name%}text{%end%}2{%end%}",
+			input: []token.Token{
+				{Typ: token.LSTMT},
+				{Typ: token.IF},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.RSTMT},
+				{Typ: token.TEXT, Val: "1"},
+				{Typ: token.LSTMT},
+				{Typ: token.IF},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.RSTMT},
+				{Typ: token.TEXT, Val: "text"},
+				{Typ: token.LSTMT},
+				{Typ: token.END},
+				{Typ: token.RSTMT},
+				{Typ: token.TEXT, Val: "2"},
+				{Typ: token.LSTMT},
+				{Typ: token.END},
+				{Typ: token.RSTMT},
+			},
+			expected: []parser.Node{
+				parser.IfStmt{
+					StmtBeg:  0,
+					IfPos:    0,
+					PostIfWs: " ",
+					Condition: parser.Ident{
+						Pos:  0,
+						Name: "var",
+					},
+					Body: []parser.Node{
+						parser.Text{
+							Pos: 0,
+							Val: "1",
+						},
+						parser.IfStmt{
+							PostIfWs: " ",
+							Condition: parser.Ident{
+								Pos:  0,
+								Name: "name",
+							},
+							Body: []parser.Node{
+								parser.Text{
+									Pos: 0,
+									Val: "text",
+								},
+							},
+						},
+						parser.Text{
+							Pos: 0,
+							Val: "2",
+						},
+					},
+					Else:    nil,
+					StmtEnd: 0,
 				},
 			},
 		},

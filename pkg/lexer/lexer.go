@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"github.com/templatesflow/cli/internal/token"
+	"github.com/templatesflow/cli/pkg/token"
 )
 
 const eof = 0

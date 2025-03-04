@@ -5,8 +5,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/templatesflow/cli/internal/parser"
-	"github.com/templatesflow/cli/internal/token"
+	"github.com/templatesflow/cli/pkg/parser"
+	"github.com/templatesflow/cli/pkg/token"
 )
 
 type testCase struct {
@@ -24,14 +24,14 @@ func runTestCases(t *testing.T, testCases []testCase) {
 			got, err := parser.Parse()
 
 			if (err != nil) != tc.errExpected {
-				t.Errorf("Unexpected error: %v", err)
+				t.Errorf("Input: %q\nUnexpected error: %v", tc.str, err)
 				return
 			}
 
 			a, _ := json.MarshalIndent(tc.expected, "", "  ")
 			b, _ := json.MarshalIndent(got, "", "  ")
 			if !slices.Equal(a, b) {
-				t.Errorf("AST mismatch.\nExpected:\n%s\nGot:\n%s", a, b)
+				t.Errorf("Input: %q\nAST mismatch.\nExpected:\n%s\nGot:\n%s", tc.str, a, b)
 			}
 		})
 	}

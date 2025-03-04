@@ -1,12 +1,10 @@
 package parser
 
-import "github.com/templatesflow/cli/internal/token"
+import "github.com/templatesflow/cli/pkg/token"
 
-type Node interface {
-}
+type Node interface{} // nolint: iface
 
-type Expr interface {
-}
+type Expr interface{} // nolint: iface
 
 type (
 	Text struct {
@@ -40,5 +38,16 @@ type (
 		PostLWS string
 		Body    Expr
 		RBrace  int
+	}
+
+	IfStmt struct {
+		StmtBeg    int
+		PostStmtWs string
+		IfPos      int
+		PostIfWs   string
+		Condition  Node
+		Body       []Node
+		Else       *[]Node
+		StmtEnd    int
 	}
 )

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/templatesflow/cli/internal/token"
+	"github.com/templatesflow/cli/pkg/token"
 )
 
 type Parser struct {
@@ -71,6 +71,8 @@ func (p *Parser) parseNode() Node {
 		return p.parseText()
 	case token.LEXPR:
 		return p.parseExprBlock()
+	case token.LSTMT:
+		return p.parseStmt()
 	case token.EOF:
 		return nil // End of input
 	default:
@@ -191,4 +193,84 @@ func getPrecedence(op token.Type) (int, bool) {
 	default:
 		return 0, false
 	}
+}
+
+func (p *Parser) parseStmt() Node {
+	if p.current.Typ != token.LSTMT {
+		p.errorf("expected LSTMT, got %v", p.current)
+		return nil
+	}
+
+	p.next() // Consume LSTMT
+	ws := p.consumeWhitespaces()
+
+	switch p.current.Typ {
+	case token.IF:
+		return p.parseIfStmt(ws)
+	default:
+		p.errorf("unexpected statement token: %v", p.current)
+		return nil
+	}
+}
+
+func (p *Parser) parseIfStmt(postStmtWs string) Node {
+	ifStmt := IfStmt{
+		StmtBeg: p.tokens[p.pos-1].Pos, // Get position of LSTMT
+		IfPos:   p.current.Pos,
+	}
+	p.next() // Consume IF
+	ifStmt.PostStmtWs = postStmtWs
+	ws := p.consumeWhitespaces()
+	ifStmt.PostIfWs = ws
+
+	// Parse the condition
+	ifStmt.Condition = p.parseExpr() // Assuming condition
+
+	if p.current.Typ != token.RSTMT {
+		p.errorf("expected RSTMT after if condition, got %v", p.current)
+		return ifStmt
+	}
+	p.next() // Consume RSTMT
+
+	ifStmt.Body = p.parseBody()
+
+	// Check for "end" statement
+	if p.current.Typ != token.LSTMT {
+		p.errorf("expected LSTMT for end, got %v", p.current)
+		return ifStmt
+	}
+	p.next() // Consume LSTMT
+
+	p.consumeWhitespaces()
+	if p.current.Typ != token.END {
+		p.errorf("expected END, got %v", p.current)
+		return ifStmt
+	}
+	p.next() // Consume END
+	p.consumeWhitespaces()
+
+	if p.current.Typ != token.RSTMT {
+		p.errorf("expected RSTMT after end, got %v", p.current)
+		return ifStmt
+	}
+	ifStmt.StmtEnd = p.current.Pos
+	p.next() // Consume RSTMT
+
+	return ifStmt
+}
+
+func (p *Parser) parseBody() []Node {
+	var body []Node
+	for {
+		if (p.pos+1 < len(p.tokens) && p.tokens[p.pos+1].Typ == token.END) ||
+			(p.pos+2 < len(p.tokens) && p.tokens[p.pos+1].Typ == token.WS && p.tokens[p.pos+2].Typ == token.END) {
+			break
+		}
+		node := p.parseNode()
+		if node == nil {
+			break
+		}
+		body = append(body, node)
+	}
+	return body
 }
