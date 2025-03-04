@@ -15,8 +15,4 @@ test:
 
 .PHONY: build
 build:
-	go build -o .out/bin cmd/cli/main.go 
-
-.PHONY: run
-run:
-	go run cmd/cli/main.go
+	go build -o .out/flow cmd/cli/main.go
