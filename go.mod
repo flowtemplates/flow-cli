@@ -1,4 +1,4 @@
-module github.com/templatesflow/cli
+module github.com/flowtemplates/cli
 
 go 1.24.0
 

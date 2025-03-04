@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/templatesflow/cli/pkg/token"
+	"github.com/flowtemplates/cli/pkg/token"
 )
 
 type Parser struct {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/templatesflow/cli/pkg/lexer"
-	"github.com/templatesflow/cli/pkg/token"
+	"github.com/flowtemplates/cli/pkg/lexer"
+	"github.com/flowtemplates/cli/pkg/token"
 )
 
 func equal(gotTokens []token.Token, expectedTokens []token.Token) error {

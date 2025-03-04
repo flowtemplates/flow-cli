@@ -1,6 +1,6 @@
 package parser
 
-import "github.com/templatesflow/cli/pkg/token"
+import "github.com/flowtemplates/cli/pkg/token"
 
 type Node interface{} // nolint: iface
 

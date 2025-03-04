@@ -3,8 +3,8 @@ package parser_test
 import (
 	"testing"
 
-	"github.com/templatesflow/cli/pkg/parser"
-	"github.com/templatesflow/cli/pkg/token"
+	"github.com/flowtemplates/cli/pkg/parser"
+	"github.com/flowtemplates/cli/pkg/token"
 )
 
 func TestExpressions(t *testing.T) {
