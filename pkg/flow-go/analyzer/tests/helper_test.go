@@ -20,7 +20,8 @@ type testCase struct {
 func runTestCases(t *testing.T, testCases []testCase) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got, errs := analyzer.GetTypeMap(tc.input)
+			got := make(analyzer.TypeMap)
+			errs := analyzer.GetTypeMap(tc.input, got)
 			if (len(errs) != 0) != tc.errExpected {
 				t.Errorf("Input: %q\nUnexpected error: %v", tc.expected, errs)
 				return

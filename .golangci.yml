@@ -323,7 +323,7 @@ linters:
 issues:
   max-same-issues: 50
   exclude-rules:
-    - text: 'shadow: declaration of "(err|ok|ctx)" shadows declaration at'
+    - text: 'shadow: declaration of "(err|errs|ok|ctx)" shadows declaration at'
       linters: [govet]
     - source: "//noinspection"
       linters: [gocritic]

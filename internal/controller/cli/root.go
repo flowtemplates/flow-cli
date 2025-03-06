@@ -3,12 +3,14 @@ package cli
 import (
 	"log/slog"
 
+	"github.com/flowtemplates/cli/pkg/flow-go/analyzer"
 	"github.com/spf13/cobra"
 )
 
 type iService interface {
 	ListTemplates() ([]string, error)
 	Add(templateName string, dests ...string) error
+	Get(templateName string) (analyzer.TypeMap, error)
 }
 
 type CliController struct {

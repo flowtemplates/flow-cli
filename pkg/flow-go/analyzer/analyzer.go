@@ -15,8 +15,7 @@ type Variable struct {
 
 type TypeMap map[string]types.Type
 
-func GetTypeMap(ast []parser.Node) (TypeMap, []error) {
-	tm := make(TypeMap)
+func GetTypeMap(ast []parser.Node, tm TypeMap) []error {
 	errs := []error{}
 
 	for _, node := range ast {
@@ -34,7 +33,7 @@ func GetTypeMap(ast []parser.Node) (TypeMap, []error) {
 		}
 	}
 
-	return tm, errs
+	return errs
 }
 
 func addToTypeMap(v Variable, tm TypeMap, errs *[]error) {

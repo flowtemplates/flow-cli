@@ -7,6 +7,9 @@ import (
 	"os"
 
 	"github.com/flowtemplates/cli/internal/repository/templates"
+	"github.com/flowtemplates/cli/pkg/flow-go/analyzer"
+	"github.com/flowtemplates/cli/pkg/flow-go/lexer"
+	"github.com/flowtemplates/cli/pkg/flow-go/parser"
 )
 
 type templatesRepo interface {
@@ -65,14 +68,59 @@ func (s Service) Add(templateName string, dests ...string) error {
 	return nil
 }
 
-func (s Service) Get(templateName string) error {
+func (s Service) Get(templateName string) (analyzer.TypeMap, error) {
 	templateDir, err := s.tr.GetTemplate(templateName)
 	if err != nil {
-		return fmt.Errorf("failed to get template: %w", err)
+		return nil, fmt.Errorf("failed to get template: %w", err)
 	}
 
-	j, _ := json.MarshalIndent(templateDir, "", "  ")
-	fmt.Printf("%s\n", j)
+	tm := make(analyzer.TypeMap)
+
+	if err := getTypeMapFromDir(templateDir, tm); err != nil {
+		return nil, err
+	}
+
+	return tm, nil
+}
+
+func getTypeMapFromDir(dir templates.Dir, tm analyzer.TypeMap) error {
+	if err := getTypeMap(dir.Name, tm); err != nil {
+		return err
+	}
+
+	for _, file := range dir.Files {
+		if err := getTypeMap(file.Name, tm); err != nil {
+			return err
+		}
+		data, err := os.ReadFile(file.Path)
+		if err != nil {
+			return fmt.Errorf("failed to open file: %w", err)
+		}
+
+		if err := getTypeMap(string(data), tm); err != nil {
+			return err
+		}
+	}
+
+	for _, d := range dir.Dirs {
+		if err := getTypeMapFromDir(d, tm); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func getTypeMap(input string, tm analyzer.TypeMap) error {
+	tokens := lexer.LexStringTokens(input)
+	ast, errs := parser.New(tokens).Parse()
+	if len(errs) != 0 {
+		return errs[0]
+	}
+
+	if errs := analyzer.GetTypeMap(ast, tm); len(errs) != 0 {
+		return errs[0]
+	}
 
 	return nil
 }

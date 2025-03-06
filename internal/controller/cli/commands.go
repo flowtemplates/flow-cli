@@ -59,14 +59,16 @@ func (c CliController) newGetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "get",
 		Short: "Get component",
-		Args:  cobra.MinimumNArgs(2),
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println(args)
+			// fmt.Println(args)
 			templateName := args[0]
-			err := c.service.Add(templateName, args[1:]...)
+			tm, err := c.service.Get(templateName)
 			if err != nil {
 				return fmt.Errorf("failed to get template: %w", err)
 			}
+			j, _ := json.Marshal(tm)
+			fmt.Printf("%s\n", j)
 
 			return nil
 		},

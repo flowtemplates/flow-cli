@@ -25,6 +25,20 @@ func LexString(input string) *Lexer {
 	return l
 }
 
+func LexStringTokens(input string) []token.Token {
+	l := LexString(input)
+	var tokens []token.Token
+	for {
+		tok := l.NextToken()
+		if tok.Typ == token.EOF {
+			break
+		}
+		tokens = append(tokens, tok)
+	}
+
+	return tokens
+}
+
 func (l *Lexer) emit(t token.Type) {
 	if l.start < l.pos {
 		l.tokens <- token.Token{
