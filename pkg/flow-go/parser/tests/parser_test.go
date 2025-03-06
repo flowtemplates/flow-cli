@@ -3,8 +3,8 @@ package parser_test
 import (
 	"testing"
 
-	"github.com/flowtemplates/cli/pkg/parser"
-	"github.com/flowtemplates/cli/pkg/token"
+	"github.com/flowtemplates/cli/pkg/flow-go/parser"
+	"github.com/flowtemplates/cli/pkg/flow-go/token"
 )
 
 func TestExpressions(t *testing.T) {
@@ -104,7 +104,8 @@ func TestExpressions(t *testing.T) {
 						},
 					},
 					RBrace: 0,
-				}},
+				},
+			},
 		},
 		{
 			name: "Addition with whitespaces",

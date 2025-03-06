@@ -1,6 +1,8 @@
 package parser
 
-import "github.com/flowtemplates/cli/pkg/token"
+import (
+	"github.com/flowtemplates/cli/pkg/flow-go/token"
+)
 
 type Node interface{} // nolint: iface
 
@@ -45,9 +47,9 @@ type (
 		PostStmtWs string
 		IfPos      int
 		PostIfWs   string
-		Condition  Node
+		Condition  Expr
 		Body       []Node
-		Else       *[]Node
+		Else       []Node
 		StmtEnd    int
 	}
 )

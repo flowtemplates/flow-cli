@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"github.com/flowtemplates/cli/pkg/token"
+	"github.com/flowtemplates/cli/pkg/flow-go/token"
 )
 
 const eof = 0

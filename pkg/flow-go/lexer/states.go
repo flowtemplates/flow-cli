@@ -4,7 +4,7 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/flowtemplates/cli/pkg/token"
+	"github.com/flowtemplates/cli/pkg/flow-go/token"
 )
 
 type stateFn func(*Lexer) stateFn

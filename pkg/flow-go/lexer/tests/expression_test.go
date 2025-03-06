@@ -3,7 +3,7 @@ package lexer_test
 import (
 	"testing"
 
-	"github.com/flowtemplates/cli/pkg/token"
+	"github.com/flowtemplates/cli/pkg/flow-go/token"
 )
 
 func TestExpressions(t *testing.T) {

@@ -5,8 +5,8 @@ import (
 	"slices"
 	"testing"
 
-	"github.com/flowtemplates/cli/pkg/parser"
-	"github.com/flowtemplates/cli/pkg/token"
+	"github.com/flowtemplates/cli/pkg/flow-go/parser"
+	"github.com/flowtemplates/cli/pkg/flow-go/token"
 )
 
 type testCase struct {
