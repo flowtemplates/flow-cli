@@ -15,7 +15,6 @@ func TestRenderer(t *testing.T) {
 			expected: "Hello world",
 			input: []parser.Node{
 				parser.Text{
-					Pos: 0,
 					Val: "Hello world",
 				},
 			},
@@ -28,9 +27,7 @@ func TestRenderer(t *testing.T) {
 			expected: "useuse",
 			input: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
-					Body:   &parser.Ident{Pos: 0, Name: "name"},
-					RBrace: 0,
+					Body: &parser.Ident{Name: "name"},
 				},
 			},
 			context: renderer.Scope{

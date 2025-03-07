@@ -16,7 +16,6 @@ func TestGetTypeMap(t *testing.T) {
 			str:  "Hello world",
 			input: []parser.Node{
 				parser.Text{
-					Pos: 0,
 					Val: "Hello world",
 				},
 			},
@@ -28,9 +27,7 @@ func TestGetTypeMap(t *testing.T) {
 			str:  "{{name}}",
 			input: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
-					Body:   parser.Ident{Pos: 0, Name: "name"},
-					RBrace: 0,
+					Body: parser.Ident{Name: "name"},
 				},
 			},
 			expected: analyzer.TypeMap{
@@ -43,21 +40,16 @@ func TestGetTypeMap(t *testing.T) {
 			str:  "{{age+123}}",
 			input: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: parser.BinaryExpr{
 						X: parser.Ident{
-							Pos:  0,
 							Name: "age",
 						},
-						OpPos: 0,
-						Op:    token.ADD,
+						Op: token.ADD,
 						Y: parser.Lit{
-							Pos: 0,
 							Val: "123",
 							Typ: token.INT,
 						},
 					},
-					RBrace: 0,
 				},
 			},
 			expected: analyzer.TypeMap{
@@ -70,21 +62,16 @@ func TestGetTypeMap(t *testing.T) {
 			str:  "{{123+age}}",
 			input: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: parser.BinaryExpr{
 						X: parser.Lit{
-							Pos: 0,
 							Val: "123",
 							Typ: token.INT,
 						},
-						OpPos: 0,
-						Op:    token.ADD,
+						Op: token.ADD,
 						Y: parser.Ident{
-							Pos:  0,
 							Name: "age",
 						},
 					},
-					RBrace: 0,
 				},
 			},
 			expected: analyzer.TypeMap{
@@ -97,20 +84,15 @@ func TestGetTypeMap(t *testing.T) {
 			str:  "{{age+time}}",
 			input: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: parser.BinaryExpr{
 						X: parser.Ident{
-							Pos:  0,
 							Name: "age",
 						},
-						OpPos: 0,
-						Op:    token.ADD,
+						Op: token.ADD,
 						Y: parser.Ident{
-							Pos:  0,
 							Name: "time",
 						},
 					},
-					RBrace: 0,
 				},
 			},
 			expected: analyzer.TypeMap{
@@ -124,21 +106,16 @@ func TestGetTypeMap(t *testing.T) {
 			str:  "{{name+'ish'}}",
 			input: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: parser.BinaryExpr{
 						X: parser.Ident{
-							Pos:  0,
 							Name: "name",
 						},
-						OpPos: 0,
-						Op:    token.ADD,
+						Op: token.ADD,
 						Y: parser.Lit{
-							Pos: 0,
 							Val: "'ish'",
 							Typ: token.STR,
 						},
 					},
-					RBrace: 0,
 				},
 			},
 			expected: analyzer.TypeMap{

@@ -17,7 +17,6 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.Text{
-					Pos: 0,
 					Val: "hello",
 				},
 			},
@@ -32,9 +31,7 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
-					Body:   &parser.Ident{Pos: 0, Name: "x"},
-					RBrace: 0,
+					Body: &parser.Ident{Name: "x"},
 				},
 			},
 		},
@@ -50,14 +47,11 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: &parser.Ident{
 						PostWS: " ",
-						Pos:    0,
 						Name:   "x",
 					},
 					PostLWS: " ",
-					RBrace:  0,
 				},
 			},
 		},
@@ -71,9 +65,7 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
-					Body:   &parser.Ident{Pos: 0, Name: "x"},
-					RBrace: 0,
+					Body: &parser.Ident{Name: "x"},
 				},
 			},
 		},
@@ -89,21 +81,16 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: &parser.BinaryExpr{
 						X: &parser.Lit{
-							Pos: 0,
 							Val: "123",
 							Typ: token.INT,
 						},
-						OpPos: 0,
-						Op:    token.ADD,
+						Op: token.ADD,
 						Y: &parser.Ident{
-							Pos:  0,
 							Name: "age",
 						},
 					},
-					RBrace: 0,
 				},
 			},
 		},
@@ -121,24 +108,20 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: &parser.BinaryExpr{
 						X: &parser.Lit{
-							Pos:    0,
 							Val:    "123",
 							PostWS: " ",
 							Typ:    token.INT,
 						},
-						OpPos:    0,
 						PostOpWS: " ",
 						Op:       token.ADD,
 						Y: &parser.Ident{
-							Pos:  0,
 							Name: "age",
 						},
 					},
-					RBrace: 0,
-				}},
+				},
+			},
 		},
 		{
 			name: "Subtraction",
@@ -152,22 +135,18 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: &parser.BinaryExpr{
 						X: &parser.Lit{
-							Pos: 0,
 							Val: "123",
 							Typ: token.INT,
 						},
-						OpPos: 0,
-						Op:    token.SUB,
+						Op: token.SUB,
 						Y: &parser.Ident{
-							Pos:  0,
 							Name: "age",
 						},
 					},
-					RBrace: 0,
-				}},
+				},
+			},
 		},
 		{
 			name: "Multiply",
@@ -181,22 +160,18 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: &parser.BinaryExpr{
 						X: &parser.Lit{
-							Pos: 0,
 							Val: "123",
 							Typ: token.INT,
 						},
-						OpPos: 0,
-						Op:    token.MUL,
+						Op: token.MUL,
 						Y: &parser.Ident{
-							Pos:  0,
 							Name: "age",
 						},
 					},
-					RBrace: 0,
-				}},
+				},
+			},
 		},
 
 		{
@@ -211,21 +186,16 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: &parser.BinaryExpr{
 						X: &parser.Lit{
-							Pos: 0,
 							Val: "123",
 							Typ: token.INT,
 						},
-						OpPos: 0,
-						Op:    token.MUL,
+						Op: token.MUL,
 						Y: &parser.Ident{
-							Pos:  0,
 							Name: "age",
 						},
 					},
-					RBrace: 0,
 				},
 			},
 		},
@@ -241,21 +211,16 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: &parser.BinaryExpr{
 						X: &parser.Ident{
-							Pos:  0,
 							Name: "age",
 						},
-						OpPos: 0,
-						Op:    token.DIV,
+						Op: token.DIV,
 						Y: &parser.Lit{
-							Pos: 0,
 							Val: "2",
 							Typ: token.INT,
 						},
 					},
-					RBrace: 0,
 				},
 			},
 		},
@@ -271,12 +236,9 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: &parser.Ident{
-						Pos:  0,
 						Name: "age",
 					},
-					RBrace: 0,
 				},
 			},
 		},
@@ -296,31 +258,24 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: &parser.BinaryExpr{
 						X: &parser.BinaryExpr{
 							X: &parser.Lit{
-								Pos: 0,
 								Val: "1",
 								Typ: token.INT,
 							},
-							OpPos: 0,
-							Op:    token.ADD,
+							Op: token.ADD,
 							Y: &parser.Lit{
-								Pos: 0,
 								Val: "2",
 								Typ: token.INT,
 							},
 						},
-						OpPos: 0,
-						Op:    token.MUL,
+						Op: token.MUL,
 						Y: &parser.Lit{
-							Pos: 0,
 							Val: "3",
 							Typ: token.INT,
 						},
 					},
-					RBrace: 0,
 				},
 			},
 		},
@@ -344,34 +299,27 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					LBrace: 0,
 					Body: &parser.BinaryExpr{
 						X: &parser.BinaryExpr{
 							X: &parser.Lit{
 								PostWS: " ",
-								Pos:    0,
 								Val:    "1",
 								Typ:    token.INT,
 							},
-							OpPos:    0,
 							PostOpWS: " ",
 							Op:       token.ADD,
 							Y: &parser.Lit{
-								Pos: 0,
 								Val: "2",
 								Typ: token.INT,
 							},
 						},
-						OpPos:    0,
 						PostOpWS: " ",
 						Op:       token.MUL,
 						Y: &parser.Lit{
-							Pos: 0,
 							Val: "3",
 							Typ: token.INT,
 						},
 					},
-					RBrace: 0,
 				},
 			},
 		},
@@ -397,22 +345,17 @@ func TestStatements(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.IfStmt{
-					StmtBeg:  0,
-					IfPos:    0,
 					PostIfWs: " ",
 					Condition: parser.Ident{
-						Pos:    0,
 						Name:   "var",
 						PostWS: "",
 					},
 					Body: []parser.Node{
 						parser.Text{
-							Pos: 0,
 							Val: "\ntext\n",
 						},
 					},
-					Else:    nil,
-					StmtEnd: 0,
+					Else: nil,
 				},
 			},
 		},
@@ -436,23 +379,18 @@ func TestStatements(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.IfStmt{
-					StmtBeg:    0,
 					PostStmtWs: " ",
-					IfPos:      0,
 					PostIfWs:   " ",
 					Condition: parser.Ident{
-						Pos:    0,
 						Name:   "var",
 						PostWS: "  ",
 					},
 					Body: []parser.Node{
 						parser.Text{
-							Pos: 0,
 							Val: "text",
 						},
 					},
-					Else:    nil,
-					StmtEnd: 0,
+					Else: nil,
 				},
 			},
 		},
@@ -482,38 +420,30 @@ func TestStatements(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.IfStmt{
-					StmtBeg:  0,
-					IfPos:    0,
 					PostIfWs: " ",
 					Condition: parser.Ident{
-						Pos:  0,
 						Name: "var",
 					},
 					Body: []parser.Node{
 						parser.Text{
-							Pos: 0,
 							Val: "1",
 						},
 						parser.IfStmt{
 							PostIfWs: " ",
 							Condition: parser.Ident{
-								Pos:  0,
 								Name: "name",
 							},
 							Body: []parser.Node{
 								parser.Text{
-									Pos: 0,
 									Val: "text",
 								},
 							},
 						},
 						parser.Text{
-							Pos: 0,
 							Val: "2",
 						},
 					},
-					Else:    nil,
-					StmtEnd: 0,
+					Else: nil,
 				},
 			},
 		},

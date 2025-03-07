@@ -10,13 +10,14 @@ import (
 type stateFn func(*Lexer) stateFn
 
 func (l *Lexer) lexToken(t token.Type, next stateFn) stateFn {
-	l.pos += len(token.TokenString(t))
+	l.pos.Offset += len(token.TokenString(t))
+	l.pos.Column += len(token.TokenString(t))
 	l.emit(t)
 	return next
 }
 
 func (l *Lexer) StartsWith(t token.Type) bool {
-	return strings.HasPrefix(l.input[l.pos:], token.TokenString(t))
+	return strings.HasPrefix(l.input[l.pos.Offset:], token.TokenString(t))
 }
 
 func (l *Lexer) tryTokens(nextState stateFn, tokens ...token.Type) stateFn {

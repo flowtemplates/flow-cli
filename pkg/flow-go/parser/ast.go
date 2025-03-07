@@ -10,46 +10,46 @@ type Expr interface{} // nolint: iface
 
 type (
 	Text struct {
-		Pos int
+		Pos token.Position
 		Val string
 	}
 
 	Lit struct {
-		Pos    int
+		Pos    token.Position
 		Typ    token.Type
 		Val    string
 		PostWS string
 	}
 
 	Ident struct {
-		Pos    int
+		Pos    token.Position
 		Name   string
 		PostWS string
 	}
 
 	BinaryExpr struct {
 		X        Expr
-		OpPos    int
+		OpPos    token.Position
 		PostOpWS string
 		Op       token.Type
 		Y        Expr
 	}
 
 	ExprBlock struct {
-		LBrace  int
+		LBrace  token.Position
 		PostLWS string
 		Body    Expr
-		RBrace  int
+		RBrace  token.Position
 	}
 
 	IfStmt struct {
-		StmtBeg    int
+		StmtBeg    token.Position
 		PostStmtWs string
-		IfPos      int
+		IfPos      token.Position
 		PostIfWs   string
 		Condition  Expr
 		Body       []Node
 		Else       []Node
-		StmtEnd    int
+		StmtEnd    token.Position
 	}
 )

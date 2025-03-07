@@ -29,8 +29,12 @@ func equal(gotTokens []token.Token, expectedTokens []token.Token) error {
 			expectedValue = token.TokenString(expected.Typ)
 		}
 
+		// if expected.Pos != got.Pos {
+		// 	return fmt.Errorf("wrong pos: expected %+v, got %+v", expected.Pos, got.Pos)
+		// }
+
 		if got.Val != expectedValue {
-			return fmt.Errorf("wrong value: expected %q, got %q", got.Val, expectedValue)
+			return fmt.Errorf("wrong value: expected %q, got %q", expectedValue, got.Val)
 		}
 	}
 

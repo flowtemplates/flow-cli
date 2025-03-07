@@ -11,12 +11,6 @@ func (t Type) String() string {
 	return TokenString(t)
 }
 
-// func (t Type) MarshalJSON() ([]byte, error) {
-// 	s := TokenString(t)
-// 	fmt.Println(s)
-// 	return []byte(s), nil
-// }
-
 const (
 	EOF Type = iota
 	ILLEGAL
@@ -193,7 +187,7 @@ func TokenRune(t Type) rune {
 type Token struct {
 	Typ Type
 	Val string
-	Pos int
+	Pos Position
 }
 
 func (t Token) IsValueable() bool {
@@ -210,11 +204,11 @@ func (t Token) String() string {
 		// case TEXT:
 		// 	return fmt.Sprintf("%.10s", t.Val)
 		default:
-			return fmt.Sprintf("{Typ: %s, Val: %q}", TokenString(t.Typ), t.Val)
+			return fmt.Sprintf("{Typ: %s, Val: %q, Pos: %s}", TokenString(t.Typ), t.Val, t.Pos)
 		}
 	}
 
-	return fmt.Sprintf("{Typ: %[1]s, Val: %[1]q}", TokenString(t.Typ))
+	return fmt.Sprintf("{Typ: %[1]s, Val: %[1]q, Pos: %s}", TokenString(t.Typ), t.Pos)
 }
 
 func (t Token) IsOneOfMany(types ...Type) bool {

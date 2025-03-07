@@ -2,6 +2,7 @@ package renderer
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/flowtemplates/cli/pkg/flow-go/parser"
@@ -77,12 +78,12 @@ func evaluateCondition(cond parser.Expr, context Scope) (string, error) {
 func valueToString(value any) string {
 	switch v := value.(type) {
 	case int:
-		return fmt.Sprintf("%d", v)
+		return strconv.Itoa(v)
 	case float64:
 		return fmt.Sprintf("%f", v)
 	case bool:
 		return ""
 	default:
-		return v.(string)
+		return fmt.Sprintf("%s", v)
 	}
 }
