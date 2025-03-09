@@ -19,7 +19,7 @@ func (e *TypeError) Error() string {
 
 type TypeErrors []TypeError
 
-func (te TypeErrors) Error() string {
+func (te TypeErrors) String() string {
 	messages := make([]string, len(te))
 	for i, err := range te {
 		messages[i] = err.Error()

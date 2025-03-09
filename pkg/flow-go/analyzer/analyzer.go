@@ -16,8 +16,8 @@ type Variable struct {
 
 type TypeMap map[string]types.Type
 
-func Typecheck(scope renderer.Scope, tm TypeMap) error {
-	errs := TypeErrors{}
+func Typecheck(scope renderer.Scope, tm TypeMap) []TypeError {
+	errs := []TypeError{}
 	for name, typ := range tm {
 		if typ == types.Any {
 			continue

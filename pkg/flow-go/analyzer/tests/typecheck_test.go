@@ -1,7 +1,6 @@
 package analyzer_test
 
 import (
-	"errors"
 	"slices"
 	"testing"
 
@@ -18,7 +17,7 @@ func TestTypecheck(t *testing.T) {
 		expectedErr []analyzer.TypeError
 	}{
 		{
-			name:        "Empty inputs",
+			name:        "Empty input",
 			scope:       renderer.Scope{},
 			tm:          analyzer.TypeMap{},
 			expectedErr: nil,
@@ -103,14 +102,9 @@ func TestTypecheck(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			err := analyzer.Typecheck(tc.scope, tc.tm)
-			var typeErrors analyzer.TypeErrors
-			if errors.As(err, &typeErrors) {
-				if !slices.Equal(typeErrors, tc.expectedErr) {
-					t.Fatalf("expected %s, got %s", tc.expectedErr, err)
-				}
-			} else {
-				t.Fatalf("unexpected error: %s", err)
+			errs := analyzer.Typecheck(tc.scope, tc.tm)
+			if !slices.Equal(errs, tc.expectedErr) {
+				t.Fatalf("expected %s, got %s", tc.expectedErr, errs)
 			}
 		})
 	}

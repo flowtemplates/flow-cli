@@ -45,6 +45,14 @@ func (s Service) ListTemplates() ([]string, error) {
 	return templateNames, nil
 }
 
+// func (s Service) ListTemplates() ([]string, error) {
+// 	templateNames, err := s.tr.GetTemplatesNames()
+// 	if err != nil {
+// 		return nil, fmt.Errorf("failed to get templates names: %w", err)
+// 	}
+
+//		return templateNames, nil
+//	}
 func (s Service) Add(
 	templateName string,
 	scope map[string]*string,
@@ -79,21 +87,19 @@ func (s Service) Add(
 	}
 
 	if err := analyzer.Typecheck(sc, tm); err != nil {
-		return fmt.Errorf("TypeErrors: %w", err)
+		return fmt.Errorf("TypeErrors: %s", err)
 	}
 
 	f := []F{}
 	if err := s.renderDir(templateDir, sc, &f); err != nil {
 		return err
 	}
-	fmt.Println(f)
 
 	list := []F{}
 
 	for _, dest := range dests {
 		for _, file := range f {
 			destPath := filepath.Join(dest, file.Path)
-			fmt.Printf("dest %s\n", destPath)
 			if s.sr.FileExists(destPath) {
 				if !overwriteFn(destPath) {
 					continue
@@ -166,6 +172,7 @@ func (s Service) renderDir(dir fs.Dir, scope renderer.Scope, out *[]F) error {
 			if err != nil {
 				return err
 			}
+			filename = strings.TrimSuffix(filename, templateFileExt)
 		}
 
 		*out = append(*out, F{

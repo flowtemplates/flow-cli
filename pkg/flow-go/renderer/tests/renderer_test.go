@@ -38,7 +38,7 @@ func TestRenderer(t *testing.T) {
 		{
 			name:     "Multiple expressions",
 			str:      "Hello {{name}}!\nFrom {{ flow }} templates",
-			expected: "Hello oly!\nFrom flow templates",
+			expected: "Hello world!\nFrom flow templates",
 			input: []parser.Node{
 				parser.Text{
 					Val: "Hello ",
@@ -57,40 +57,59 @@ func TestRenderer(t *testing.T) {
 				},
 			},
 			context: renderer.Scope{
-				"name": "oly",
+				"name": "world",
 				"flow": "flow",
 			},
 			errExpected: false,
 		},
-		// {
-		// 	name:     "If statement",
-		// 	str:      "{%if var%}\ntext\n{%end%}",
-		// 	expected: "\ntext\n",
-		// 	input: []parser.Node{
-		// 		parser.IfStmt{
-		// 			StmtBeg:  0,
-		// 			IfPos:    0,
-		// 			PostIfWs: " ",
-		// 			Condition: parser.Ident{
-		// 				Pos:    0,
-		// 				Name:   "var",
-		// 				PostWS: "",
-		// 			},
-		// 			Body: []parser.Node{
-		// 				parser.Text{
-		// 					Pos: 0,
-		// 					Val: "\ntext\n",
-		// 				},
-		// 			},
-		// 			Else:    nil,
-		// 			StmtEnd: 0,
-		// 		},
-		// 	},
-		// 	context: renderer.Scope{
-		// 		"var": true,
-		// 	},
-		// 	errExpected: false,
-		// },
+		{
+			name:     "Truthy if statement",
+			str:      "{%if var%}\ntext\n{%end%}",
+			expected: "\ntext\n",
+			input: []parser.Node{
+				parser.IfStmt{
+					PostIfWs: " ",
+					Condition: parser.Ident{
+						Name:   "var",
+						PostWS: "",
+					},
+					Body: []parser.Node{
+						parser.Text{
+							Val: "\ntext\n",
+						},
+					},
+					Else: nil,
+				},
+			},
+			context: renderer.Scope{
+				"var": "true",
+			},
+			errExpected: false,
+		},
+		{
+			name:     "Falsy if statement",
+			str:      "{%if var%}\ntext\n{%end%}",
+			expected: "",
+			input: []parser.Node{
+				parser.IfStmt{
+					PostIfWs: " ",
+					Condition: parser.Ident{
+						Name:   "var",
+						PostWS: "",
+					},
+					Body: []parser.Node{
+						parser.Text{
+							Val: "\ntext\n",
+						},
+					},
+					Else: nil,
+				},
+			},
+			context: renderer.Scope{
+				"var": "false",
+			},
+			errExpected: false,
+		},
 	}
 	runTestCases(t, testCases)
 }

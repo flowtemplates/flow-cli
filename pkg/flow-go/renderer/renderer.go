@@ -10,8 +10,6 @@ import (
 
 type Scope map[string]string
 
-// func RenderFile(ast []parser.Node, context Scope) (string, error) {}
-
 func RenderAst(ast []parser.Node, context Scope) (string, error) {
 	var result strings.Builder
 	for _, node := range ast {
@@ -36,7 +34,7 @@ func RenderAst(ast []parser.Node, context Scope) (string, error) {
 				return "", err
 			}
 
-			if conditionValue != "" {
+			if isFalsy(conditionValue) {
 				bodyContent, err := RenderAst(n.Body, context)
 				if err != nil {
 					return "", err
@@ -90,5 +88,14 @@ func valueToString(value any) string {
 		return ""
 	default:
 		return fmt.Sprintf("%s", v)
+	}
+}
+
+func isFalsy(value string) bool {
+	switch value {
+	case "", "false", "0":
+		return false
+	default:
+		return true
 	}
 }
