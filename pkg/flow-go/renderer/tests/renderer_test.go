@@ -27,11 +27,38 @@ func TestRenderer(t *testing.T) {
 			expected: "useuse",
 			input: []parser.Node{
 				parser.ExprBlock{
-					Body: &parser.Ident{Name: "name"},
+					Body: parser.Ident{Name: "name"},
 				},
 			},
 			context: renderer.Scope{
 				"name": "useuse",
+			},
+			errExpected: false,
+		},
+		{
+			name:     "Multiple expressions",
+			str:      "Hello {{name}}!\nFrom {{ flow }} templates",
+			expected: "Hello oly!\nFrom flow templates",
+			input: []parser.Node{
+				parser.Text{
+					Val: "Hello ",
+				},
+				parser.ExprBlock{
+					Body: parser.Ident{Name: "name"},
+				},
+				parser.Text{
+					Val: "!\nFrom ",
+				},
+				parser.ExprBlock{
+					Body: parser.Ident{Name: "flow"},
+				},
+				parser.Text{
+					Val: " templates",
+				},
+			},
+			context: renderer.Scope{
+				"name": "oly",
+				"flow": "flow",
 			},
 			errExpected: false,
 		},

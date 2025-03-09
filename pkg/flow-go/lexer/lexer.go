@@ -13,7 +13,7 @@ type Lexer struct {
 	tokens chan token.Token
 }
 
-func LexString(input string) *Lexer {
+func FromString(input string) *Lexer {
 	l := &Lexer{
 		input: input,
 		start: token.Position{
@@ -29,8 +29,8 @@ func LexString(input string) *Lexer {
 	return l
 }
 
-func LexStringTokens(input string) []token.Token {
-	l := LexString(input)
+func TokensFromString(input string) []token.Token {
+	l := FromString(input)
 	var tokens []token.Token
 	for {
 		tok := l.NextToken()

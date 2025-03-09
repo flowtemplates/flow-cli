@@ -9,7 +9,7 @@ import (
 
 type iService interface {
 	ListTemplates() ([]string, error)
-	Add(templateName string, dests ...string) error
+	Add(templateName string, scope map[string]*string, overwriteFn func(path string) bool, dests ...string) error
 	Get(templateName string) (analyzer.TypeMap, error)
 }
 

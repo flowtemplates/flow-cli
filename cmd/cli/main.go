@@ -9,6 +9,7 @@ import (
 
 	"github.com/flowtemplates/cli/internal/config"
 	"github.com/flowtemplates/cli/internal/controller/cli"
+	"github.com/flowtemplates/cli/internal/repository/source"
 	"github.com/flowtemplates/cli/internal/repository/templates"
 	"github.com/flowtemplates/cli/internal/service"
 )
@@ -25,8 +26,10 @@ func run() error {
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-	r := templates.New(cfg.TemplatesFolder)
-	s := service.New(r)
+	tr := templates.New(cfg.TemplatesFolder)
+	sr := source.New()
+
+	s := service.New(tr, sr)
 	c := cli.New(s, logger)
 
 	return c.Cmd().ExecuteContext(ctx) // nolint: wrapcheck

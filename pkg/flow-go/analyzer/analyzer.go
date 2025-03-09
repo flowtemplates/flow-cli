@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/flowtemplates/cli/pkg/flow-go/parser"
+	"github.com/flowtemplates/cli/pkg/flow-go/renderer"
 	"github.com/flowtemplates/cli/pkg/flow-go/token"
 	"github.com/flowtemplates/cli/pkg/flow-go/types"
 )
@@ -15,9 +16,36 @@ type Variable struct {
 
 type TypeMap map[string]types.Type
 
+func Typecheck(scope renderer.Scope, tm TypeMap) error {
+	errs := TypeErrors{}
+	for name, typ := range tm {
+		if typ == types.Any {
+			continue
+		}
+
+		value, ok := scope[name]
+		if !ok {
+			scope[name] = typ.GetDefaultValue()
+		}
+
+		if !typ.IsValid(value) {
+			errs = append(errs, TypeError{
+				ExpectedType: typ,
+				Name:         name,
+				Val:          value,
+			})
+		}
+	}
+
+	if len(errs) != 0 {
+		return errs
+	}
+
+	return nil
+}
+
 func GetTypeMap(ast []parser.Node, tm TypeMap) []error {
 	errs := []error{}
-
 	for _, node := range ast {
 		switch n := node.(type) {
 		case parser.ExprBlock:

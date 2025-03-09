@@ -3,6 +3,7 @@ package cli
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -35,14 +36,40 @@ func (c CliController) newListCmd() *cobra.Command {
 	return cmd
 }
 
+func (c CliController) parseVars(vars []string) map[string]*string {
+	res := make(map[string]*string)
+	for _, v := range vars {
+		if strings.Contains(v, "=") {
+			parts := strings.SplitN(v, "=", 2)
+			res[parts[0]] = &parts[1]
+		} else {
+			res[v] = nil
+		}
+	}
+
+	return res
+}
+
 func (c CliController) newAddCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "add",
-		Short: "Add component to dir",
-		Args:  cobra.MinimumNArgs(2),
+		Use:   "add <template name> [flags] [destination paths...]",
+		Short: "Add component to dirs",
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			templateName := args[0]
-			err := c.service.Add(templateName, args[1:]...)
+			vars := c.parseVars(args[1:])
+			// fmt.Println("templateName:", templateName)
+			// fmt.Println("vars:", vars)
+
+			paths, _ := cmd.Flags().GetStringSlice("out")
+			// fmt.Println("Paths:", paths)
+
+			overWriteFn := func(path string) bool {
+				fmt.Printf("overwrite %s\n", path)
+				return false
+			}
+
+			err := c.service.Add(templateName, vars, overWriteFn, paths...)
 			if err != nil {
 				return fmt.Errorf("failed to add: %w", err)
 			}
@@ -51,7 +78,9 @@ func (c CliController) newAddCmd() *cobra.Command {
 		},
 	}
 
+	cmd.Flags().StringSliceP("out", "o", []string{}, "Output paths")
 	cmd.Flags().Bool("json", false, "Output in JSON format")
+
 	return cmd
 }
 
@@ -61,7 +90,6 @@ func (c CliController) newGetCmd() *cobra.Command {
 		Short: "Get component",
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// fmt.Println(args)
 			templateName := args[0]
 			tm, err := c.service.Get(templateName)
 			if err != nil {

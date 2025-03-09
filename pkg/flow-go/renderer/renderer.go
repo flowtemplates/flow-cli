@@ -8,9 +8,11 @@ import (
 	"github.com/flowtemplates/cli/pkg/flow-go/parser"
 )
 
-type Scope map[string]any
+type Scope map[string]string
 
-func Render(ast []parser.Node, context Scope) (string, error) {
+// func RenderFile(ast []parser.Node, context Scope) (string, error) {}
+
+func RenderAst(ast []parser.Node, context Scope) (string, error) {
 	var result strings.Builder
 	for _, node := range ast {
 		switch n := node.(type) {
@@ -19,9 +21,12 @@ func Render(ast []parser.Node, context Scope) (string, error) {
 		case parser.ExprBlock:
 			switch body := n.Body.(type) {
 			case parser.Ident:
-				return identToString(&body, context)
-			case *parser.Ident:
-				return identToString(body, context)
+				s, err := identToString(&body, context)
+				if err != nil {
+					return "", err
+				}
+
+				result.WriteString(s)
 			default:
 				return "", fmt.Errorf("unsupported expr type: %T", body)
 			}
@@ -32,14 +37,14 @@ func Render(ast []parser.Node, context Scope) (string, error) {
 			}
 
 			if conditionValue != "" {
-				bodyContent, err := Render(n.Body, context)
+				bodyContent, err := RenderAst(n.Body, context)
 				if err != nil {
 					return "", err
 				}
 
 				result.WriteString(bodyContent)
 			} else if n.Else != nil {
-				elseContent, err := Render(n.Else, context)
+				elseContent, err := RenderAst(n.Else, context)
 				if err != nil {
 					return "", err
 				}

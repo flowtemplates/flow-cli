@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/flowtemplates/cli/pkg/fs"
 )
 
 type TemplatesRepo struct {
@@ -31,45 +33,43 @@ func (r TemplatesRepo) GetTemplatesNames() ([]string, error) {
 	return directories, nil
 }
 
-type File struct {
-	Name string
-	Path string
-}
+func (r TemplatesRepo) readDirTree(templateName string, relBaseDirPath string) (fs.Dir, error) {
+	fullDirPath := filepath.Join(r.baseDir, templateName, relBaseDirPath)
 
-// Dir represents a directory containing files and subdirectories.
-type Dir struct {
-	Name  string
-	Path  string
-	Files []File
-	Dirs  []Dir
-}
+	root := fs.Dir{Name: filepath.Base(relBaseDirPath), Path: filepath.Dir(relBaseDirPath)}
 
-func readDirTree(dirPath string) (Dir, error) {
-	root := Dir{Name: filepath.Base(dirPath), Path: dirPath}
-
-	entries, err := os.ReadDir(dirPath)
+	entries, err := os.ReadDir(fullDirPath)
 	if err != nil {
-		return Dir{}, err
+		return fs.Dir{}, err
 	}
 
 	for _, entry := range entries {
-		fullPath := filepath.Join(dirPath, entry.Name())
+		relPath := filepath.Join(relBaseDirPath, entry.Name())
 
 		if entry.IsDir() {
-			subDir, err := readDirTree(fullPath)
+			subDir, err := r.readDirTree(templateName, relPath)
 			if err != nil {
-				return Dir{}, err
+				return fs.Dir{}, err
 			}
 			root.Dirs = append(root.Dirs, subDir)
 		} else {
-			root.Files = append(root.Files, File{Name: entry.Name(), Path: fullPath})
+			full := filepath.Join(r.baseDir, templateName, relPath)
+			source, err := os.ReadFile(full)
+			if err != nil {
+				return fs.Dir{}, fmt.Errorf("failed to open file %s: %w", relPath, err)
+			}
+
+			root.Files = append(root.Files, fs.File{
+				Name:   entry.Name(),
+				Path:   relPath,
+				Source: string(source),
+			})
 		}
 	}
 
 	return root, nil
 }
 
-func (r TemplatesRepo) GetTemplate(templateName string) (Dir, error) {
-	templatePath := filepath.Join(r.baseDir, templateName)
-	return readDirTree(templatePath)
+func (r TemplatesRepo) GetTemplate(templateName string) (fs.Dir, error) {
+	return r.readDirTree(templateName, "")
 }
