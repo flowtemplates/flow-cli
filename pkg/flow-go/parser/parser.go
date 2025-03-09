@@ -31,10 +31,10 @@ func (p *Parser) Parse() ([]Node, []error) {
 		if node != nil {
 			p.nodes = append(p.nodes, node)
 		} else {
-			// Avoid infinite loop on errors, consume the token
 			p.next()
 		}
 	}
+
 	return p.nodes, p.errors
 }
 
@@ -61,7 +61,6 @@ func (p *Parser) getCurrent() token.Token {
 	if p.pos < len(p.tokens) {
 		return p.tokens[p.pos]
 	}
-
 	return token.Token{Typ: token.EOF}
 }
 
@@ -95,14 +94,15 @@ func (p *Parser) parseExprBlock() Node {
 		LBrace: p.current.Pos,
 	}
 	p.next() // Consume LEXPR
-	exprBlock.PostLWS = p.consumeWhitespaces()
+	exprBlock.PostLWs = p.consumeWhitespaces()
 
 	exprBlock.Body = p.parseExpr()
 
 	if p.current.Typ != token.REXPR {
 		p.errorf("expected REXPR, got %v", p.current)
-		return exprBlock // Still return the partial ExprBlock
+		return exprBlock
 	}
+
 	exprBlock.RBrace = p.current.Pos
 	p.next() // Consume REXPR
 	return exprBlock
@@ -117,7 +117,7 @@ func (p *Parser) parseBinaryExpr(minPrecedence int) Node {
 	left := p.parsePrimary()
 
 	for {
-		opPrecedence, isRightAssoc := getPrecedence(p.current.Typ)
+		opPrecedence, isRightAssoc := getPrecedence(p.current)
 		if opPrecedence < minPrecedence {
 			break
 		}
@@ -137,11 +137,12 @@ func (p *Parser) parseBinaryExpr(minPrecedence int) Node {
 		left = &BinaryExpr{
 			X:        left,
 			OpPos:    op.Pos,
-			PostOpWS: ws,
+			PostOpWs: ws,
 			Op:       op.Typ,
 			Y:        right,
 		}
 	}
+
 	return left
 }
 
@@ -154,7 +155,7 @@ func (p *Parser) parsePrimary() Node {
 			Name: p.current.Val,
 		}
 		p.next()
-		ident.PostWS = p.consumeWhitespaces()
+		ident.PostWs = p.consumeWhitespaces()
 		return ident
 	case token.INT, token.FLOAT:
 		lit := Lit{
@@ -163,7 +164,7 @@ func (p *Parser) parsePrimary() Node {
 			Typ: p.current.Typ,
 		}
 		p.next()
-		lit.PostWS = p.consumeWhitespaces()
+		lit.PostWs = p.consumeWhitespaces()
 		return lit
 	case token.LPAREN:
 		p.next() // Consume '('
@@ -182,14 +183,18 @@ func (p *Parser) parsePrimary() Node {
 }
 
 // getPrecedence returns the precedence and associativity of an operator.
-func getPrecedence(op token.Type) (int, bool) {
-	switch op {
+func getPrecedence(tok token.Token) (int, bool) {
+	if tok.IsComparisonOp() {
+		return 10, false
+	}
+
+	switch tok.Typ {
 	case token.ADD, token.SUB:
-		return 1, false // Left-associative
+		return 20, false // Left-associative
 	case token.MUL, token.DIV:
-		return 2, false // Left-associative
+		return 30, false // Left-associative
 	// case token.POW:
-	// 	return 3, true
+	// 	return 40, true
 	default:
 		return 0, false
 	}
@@ -207,6 +212,8 @@ func (p *Parser) parseStmt() Node {
 	switch p.current.Typ {
 	case token.IF:
 		return p.parseIfStmt(ws)
+	case token.GENIF:
+		return p.parseGenIfStmt(ws)
 	default:
 		p.errorf("unexpected statement token: %v", p.current)
 		return nil
@@ -216,12 +223,12 @@ func (p *Parser) parseStmt() Node {
 func (p *Parser) parseIfStmt(postStmtWs string) Node {
 	ifStmt := IfStmt{
 		StmtBeg: p.tokens[p.pos-1].Pos, // Get position of LSTMT
-		IfPos:   p.current.Pos,
+		KwPos:   p.current.Pos,
 	}
 	p.next() // Consume IF
 	ifStmt.PostStmtWs = postStmtWs
 	ws := p.consumeWhitespaces()
-	ifStmt.PostIfWs = ws
+	ifStmt.PostKwWs = ws
 
 	// Parse the condition
 	ifStmt.Condition = p.parseExpr() // Assuming condition
@@ -257,6 +264,28 @@ func (p *Parser) parseIfStmt(postStmtWs string) Node {
 	p.next() // Consume RSTMT
 
 	return ifStmt
+}
+
+func (p *Parser) parseGenIfStmt(postStmtWs string) Node {
+	genifStmt := GenIfStmt{
+		StmtBeg: p.tokens[p.pos-1].Pos, // Get position of LSTMT
+		KwPos:   p.current.Pos,
+	}
+	p.next() // Consume GENIF
+	genifStmt.PostStmtWs = postStmtWs
+	ws := p.consumeWhitespaces()
+	genifStmt.PostKwWs = ws
+
+	// Parse the condition
+	genifStmt.Condition = p.parseExpr() // Assuming condition
+
+	if p.current.Typ != token.RSTMT {
+		p.errorf("expected RSTMT after genif condition, got %v", p.current)
+		return genifStmt
+	}
+	p.next() // Consume RSTMT
+
+	return genifStmt
 }
 
 func (p *Parser) parseBody() []Node {

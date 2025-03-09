@@ -128,10 +128,10 @@ func TestGetTypeMap(t *testing.T) {
 			str:  "{%if var%}\ntext\n{%end%}",
 			input: []parser.Node{
 				parser.IfStmt{
-					PostIfWs: " ",
+					PostKwWs: " ",
 					Condition: parser.Ident{
 						Name:   "var",
-						PostWS: "",
+						PostWs: "",
 					},
 					Body: []parser.Node{
 						parser.Text{

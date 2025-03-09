@@ -50,6 +50,7 @@ const (
 	QUESTION // ?
 	COLON    // :
 
+	comparison_op_beg
 	EQL  // ==
 	LESS // <
 	GTR  // >
@@ -59,6 +60,7 @@ const (
 	GEQ  // >=
 	LAND // &&
 	LOR  // ||
+	comparison_op_end
 
 	LPAREN // (
 	LBRACK // [
@@ -192,19 +194,13 @@ type Token struct {
 	Pos Position
 }
 
-func (t Token) IsValueable() bool {
-	return valueable_beg < t.Typ && t.Typ < valueable_end
-}
-
 func (t Token) String() string {
 	if t.IsValueable() {
 		switch t.Typ {
 		case EOF:
 			return "EOF"
-		// case IDENT | FLOAT | INT | STRING:
-		// 	return fmt.Sprintf("%s(%s)", TokenString(t.Typ), t.Val)
-		// case TEXT:
-		// 	return fmt.Sprintf("%.10s", t.Val)
+		case TEXT:
+			return fmt.Sprintf("{Typ: %s, Val: %.10q, Pos: %s}", TokenString(t.Typ), t.Val, t.Pos)
 		default:
 			return fmt.Sprintf("{Typ: %s, Val: %q, Pos: %s}", TokenString(t.Typ), t.Val, t.Pos)
 		}
@@ -215,6 +211,14 @@ func (t Token) String() string {
 
 func (t Token) IsOneOfMany(types ...Type) bool {
 	return slices.Contains(types, t.Typ)
+}
+
+func (t Token) IsValueable() bool {
+	return valueable_beg < t.Typ && t.Typ < valueable_end
+}
+
+func (t Token) IsComparisonOp() bool {
+	return comparison_op_beg < t.Typ && t.Typ < comparison_op_end
 }
 
 func IsNotOp(r rune) bool {

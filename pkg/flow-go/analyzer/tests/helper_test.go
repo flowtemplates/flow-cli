@@ -21,7 +21,7 @@ func runTestCases(t *testing.T, testCases []testCase) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			got := make(analyzer.TypeMap)
-			errs := analyzer.GetTypeMap(tc.input, got)
+			errs := analyzer.GetTypeMapFromAst(tc.input, got)
 			if (len(errs) != 0) != tc.errExpected {
 				t.Errorf("Input: %q\nUnexpected error: %v", tc.expected, errs)
 				return

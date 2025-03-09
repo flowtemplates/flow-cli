@@ -48,10 +48,10 @@ func TestExpressions(t *testing.T) {
 			expected: []parser.Node{
 				parser.ExprBlock{
 					Body: &parser.Ident{
-						PostWS: " ",
+						PostWs: " ",
 						Name:   "x",
 					},
-					PostLWS: " ",
+					PostLWs: " ",
 				},
 			},
 		},
@@ -111,10 +111,10 @@ func TestExpressions(t *testing.T) {
 					Body: &parser.BinaryExpr{
 						X: &parser.Lit{
 							Val:    "123",
-							PostWS: " ",
+							PostWs: " ",
 							Typ:    token.INT,
 						},
-						PostOpWS: " ",
+						PostOpWs: " ",
 						Op:       token.ADD,
 						Y: &parser.Ident{
 							Name: "age",
@@ -299,23 +299,23 @@ func TestExpressions(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.ExprBlock{
-					Body: &parser.BinaryExpr{
-						X: &parser.BinaryExpr{
-							X: &parser.Lit{
-								PostWS: " ",
+					Body: parser.BinaryExpr{
+						X: parser.BinaryExpr{
+							X: parser.Lit{
+								PostWs: " ",
 								Val:    "1",
 								Typ:    token.INT,
 							},
-							PostOpWS: " ",
+							PostOpWs: " ",
 							Op:       token.ADD,
-							Y: &parser.Lit{
+							Y: parser.Lit{
 								Val: "2",
 								Typ: token.INT,
 							},
 						},
-						PostOpWS: " ",
+						PostOpWs: " ",
 						Op:       token.MUL,
-						Y: &parser.Lit{
+						Y: parser.Lit{
 							Val: "3",
 							Typ: token.INT,
 						},
@@ -327,10 +327,10 @@ func TestExpressions(t *testing.T) {
 	runTestCases(t, testCases)
 }
 
-func TestStatements(t *testing.T) {
+func TestIfStatements(t *testing.T) {
 	testCases := []testCase{
 		{
-			name: "If statement",
+			name: "Simple if statement",
 			str:  "{%if var%}\ntext\n{%end%}",
 			input: []token.Token{
 				{Typ: token.LSTMT},
@@ -345,10 +345,10 @@ func TestStatements(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.IfStmt{
-					PostIfWs: " ",
+					PostKwWs: " ",
 					Condition: parser.Ident{
 						Name:   "var",
-						PostWS: "",
+						PostWs: "",
 					},
 					Body: []parser.Node{
 						parser.Text{
@@ -380,10 +380,10 @@ func TestStatements(t *testing.T) {
 			expected: []parser.Node{
 				parser.IfStmt{
 					PostStmtWs: " ",
-					PostIfWs:   " ",
+					PostKwWs:   " ",
 					Condition: parser.Ident{
 						Name:   "var",
-						PostWS: "  ",
+						PostWs: "  ",
 					},
 					Body: []parser.Node{
 						parser.Text{
@@ -420,7 +420,7 @@ func TestStatements(t *testing.T) {
 			},
 			expected: []parser.Node{
 				parser.IfStmt{
-					PostIfWs: " ",
+					PostKwWs: " ",
 					Condition: parser.Ident{
 						Name: "var",
 					},
@@ -429,7 +429,7 @@ func TestStatements(t *testing.T) {
 							Val: "1",
 						},
 						parser.IfStmt{
-							PostIfWs: " ",
+							PostKwWs: " ",
 							Condition: parser.Ident{
 								Name: "name",
 							},
@@ -444,6 +444,145 @@ func TestStatements(t *testing.T) {
 						},
 					},
 					Else: nil,
+				},
+			},
+		},
+	}
+	runTestCases(t, testCases)
+}
+
+func TestGenIfStatements(t *testing.T) {
+	testCases := []testCase{
+		{
+			name: "Simple genif",
+			str:  "{%genif var%}",
+			input: []token.Token{
+				{Typ: token.LSTMT},
+				{Typ: token.GENIF},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.RSTMT},
+			},
+			expected: []parser.Node{
+				parser.GenIfStmt{
+					PostKwWs: " ",
+					Condition: parser.Ident{
+						Name:   "var",
+						PostWs: "",
+					},
+				},
+			},
+		},
+		{
+			name: "Genif with equality",
+			str:  "{%genif var == 2%}",
+			input: []token.Token{
+				{Typ: token.LSTMT},
+				{Typ: token.GENIF},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.EQL},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.INT, Val: "2"},
+				{Typ: token.RSTMT},
+			},
+			expected: []parser.Node{
+				parser.GenIfStmt{
+					PostKwWs: " ",
+					Condition: parser.BinaryExpr{
+						X: parser.Ident{
+							Name:   "var",
+							PostWs: " ",
+						},
+						PostOpWs: " ",
+						Op:       token.EQL,
+						Y: parser.Lit{
+							Typ: token.INT,
+							Val: "2",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Genif with comparison",
+			str:  "{%genif var > 3%}",
+			input: []token.Token{
+				{Typ: token.LSTMT},
+				{Typ: token.GENIF},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.GTR},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.INT, Val: "3"},
+				{Typ: token.RSTMT},
+			},
+			expected: []parser.Node{
+				parser.GenIfStmt{
+					PostKwWs: " ",
+					Condition: parser.BinaryExpr{
+						X: parser.Ident{
+							Name:   "var",
+							PostWs: " ",
+						},
+						PostOpWs: " ",
+						Op:       token.GTR,
+						Y: parser.Lit{
+							Typ: token.INT,
+							Val: "3",
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "Genif with complex expression",
+			str:  "{%genif (var+1)/2+name%}",
+			input: []token.Token{
+				{Typ: token.LSTMT},
+				{Typ: token.GENIF},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.LPAREN},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.ADD},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.RPAREN},
+				{Typ: token.DIV},
+				{Typ: token.INT, Val: "2"},
+				{Typ: token.ADD},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.RSTMT},
+			},
+			expected: []parser.Node{
+				parser.GenIfStmt{
+					PostKwWs: " ",
+					Condition: parser.BinaryExpr{
+						X: parser.BinaryExpr{
+							X: parser.BinaryExpr{
+								X: parser.Ident{
+									Name: "var",
+								},
+								PostOpWs: "",
+								Op:       token.ADD,
+								Y: parser.Lit{
+									Typ: token.INT,
+									Val: "1",
+								},
+							},
+							Op: token.DIV,
+							Y: parser.Lit{
+								Typ: token.INT,
+								Val: "2",
+							},
+						},
+						PostOpWs: "",
+						Op:       token.ADD,
+						Y: parser.Ident{
+							Name: "name",
+						},
+					},
 				},
 			},
 		},

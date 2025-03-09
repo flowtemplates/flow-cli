@@ -68,10 +68,10 @@ func TestRenderer(t *testing.T) {
 			expected: "\ntext\n",
 			input: []parser.Node{
 				parser.IfStmt{
-					PostIfWs: " ",
+					PostKwWs: " ",
 					Condition: parser.Ident{
 						Name:   "var",
-						PostWS: "",
+						PostWs: "",
 					},
 					Body: []parser.Node{
 						parser.Text{
@@ -92,10 +92,10 @@ func TestRenderer(t *testing.T) {
 			expected: "",
 			input: []parser.Node{
 				parser.IfStmt{
-					PostIfWs: " ",
+					PostKwWs: " ",
 					Condition: parser.Ident{
 						Name:   "var",
-						PostWS: "",
+						PostWs: "",
 					},
 					Body: []parser.Node{
 						parser.Text{

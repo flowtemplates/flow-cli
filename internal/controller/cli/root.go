@@ -12,8 +12,13 @@ import (
 
 type iService interface {
 	ListTemplates() ([]string, error)
-	Add(templateName string, scope map[string]*string, overwriteFn func(path string) bool, dests ...string) error
-	Get(templateName string) (analyzer.TypeMap, error)
+	Add(
+		templateName string,
+		scope map[string]*string,
+		overwriteFn func(paths []string) ([]string, error),
+		dests ...string,
+	) error
+	GetTemplate(templateName string) (analyzer.TypeMap, error)
 }
 
 type CliController struct {
@@ -32,8 +37,8 @@ func (c CliController) Cmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "flow",
 		Short: "FlowTemplates CLI",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return c.showForm()
+		RunE: func(_ *cobra.Command, _ []string) error {
+			return c.handleMain()
 		},
 	}
 
@@ -44,13 +49,13 @@ func (c CliController) Cmd() *cobra.Command {
 	return rootCmd
 }
 
-func (c CliController) showForm() error {
-	var templateName string
-
+func (c CliController) handleMain() error {
 	templates, err := c.service.ListTemplates()
 	if err != nil {
 		return fmt.Errorf("failed to load templates: %w", err)
 	}
+
+	var templateName string
 
 	templateForm := huh.NewForm(
 		huh.NewGroup(
@@ -68,10 +73,10 @@ func (c CliController) showForm() error {
 	)
 
 	if err := templateForm.Run(); err != nil {
-		return err
+		return fmt.Errorf("failed to run template form: %w", err)
 	}
 
-	tm, err := c.service.Get(templateName)
+	tm, err := c.service.GetTemplate(templateName)
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
@@ -96,7 +101,7 @@ func (c CliController) showForm() error {
 		}
 	}
 
-	var res []string
+	var selectedFlags []string
 	var dest string
 
 	groups := []*huh.Group{}
@@ -108,8 +113,8 @@ func (c CliController) showForm() error {
 		groups = append(groups, huh.NewGroup(
 			huh.NewMultiSelect[string]().
 				Options(flagFields...).
-				Title("Flags").
-				Value(&res),
+				Title("Select flags").
+				Value(&selectedFlags),
 		))
 	}
 
@@ -124,23 +129,37 @@ func (c CliController) showForm() error {
 				Value(&dest),
 		))
 
-	dynamicForm := huh.NewForm(groups...)
+	paramsForm := huh.NewForm(groups...)
 
-	if err := dynamicForm.Run(); err != nil {
-		return err
+	if err := paramsForm.Run(); err != nil {
+		return fmt.Errorf("failed to run form: %w", err)
 	}
 
-	for _, name := range res {
+	for _, name := range selectedFlags {
 		variableMap[name] = nil
 	}
 
-	// fmt.Printf("vars: %v\n", variableMap)
-	// fmt.Printf("res: %v\n", res)
-	// fmt.Printf("dest: %v\n", dest)
+	overWriteFn := func(paths []string) ([]string, error) {
+		ov := []string{}
+		overwriteForm := huh.NewForm(
+			huh.NewGroup(
+				huh.NewMultiSelect[string]().
+					Title("Select files to overwrite").
+					OptionsFunc(func() []huh.Option[string] {
+						var options []huh.Option[string]
+						for _, t := range paths {
+							options = append(options, huh.NewOption(t, t).Selected(true))
+						}
+						return options
+					}, &templateName).
+					Value(&ov),
+			),
+		)
+		if err := overwriteForm.Run(); err != nil {
+			return nil, fmt.Errorf("failed to run overwrite form: %w", err)
+		}
 
-	overWriteFn := func(path string) bool {
-		// fmt.Printf("overwrite %s ", path)
-		return false
+		return ov, nil
 	}
 
 	if err := c.service.Add(templateName, variableMap, overWriteFn, dest); err != nil {

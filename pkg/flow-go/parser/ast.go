@@ -8,6 +8,8 @@ type Node interface{} // nolint: iface
 
 type Expr interface{} // nolint: iface
 
+type Stmt interface{} // nolint: iface
+
 type (
 	Text struct {
 		Pos token.Position
@@ -18,26 +20,26 @@ type (
 		Pos    token.Position
 		Typ    token.Type
 		Val    string
-		PostWS string
+		PostWs string
 	}
 
 	Ident struct {
 		Pos    token.Position
 		Name   string
-		PostWS string
+		PostWs string
 	}
 
 	BinaryExpr struct {
 		X        Expr
 		OpPos    token.Position
-		PostOpWS string
+		PostOpWs string
 		Op       token.Type
 		Y        Expr
 	}
 
 	ExprBlock struct {
 		LBrace  token.Position
-		PostLWS string
+		PostLWs string
 		Body    Expr
 		RBrace  token.Position
 	}
@@ -45,11 +47,20 @@ type (
 	IfStmt struct {
 		StmtBeg    token.Position
 		PostStmtWs string
-		IfPos      token.Position
-		PostIfWs   string
+		KwPos      token.Position
+		PostKwWs   string
 		Condition  Expr
 		Body       []Node
 		Else       []Node
+		StmtEnd    token.Position
+	}
+
+	GenIfStmt struct {
+		StmtBeg    token.Position
+		PostStmtWs string
+		KwPos      token.Position
+		PostKwWs   string
+		Condition  Expr
 		StmtEnd    token.Position
 	}
 )

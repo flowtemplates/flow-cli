@@ -60,9 +60,8 @@ func (c CliController) newAddCmd() *cobra.Command {
 			vars := c.parseVars(args[1:])
 			paths, _ := cmd.Flags().GetStringSlice("out")
 
-			overWriteFn := func(path string) bool {
-				fmt.Printf("overwrite %s\n", path)
-				return false
+			overWriteFn := func(path []string) ([]string, error) {
+				return []string{}, nil
 			}
 
 			err := c.service.Add(templateName, vars, overWriteFn, paths...)
@@ -87,7 +86,7 @@ func (c CliController) newGetCmd() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			templateName := args[0]
-			tm, err := c.service.Get(templateName)
+			tm, err := c.service.GetTemplate(templateName)
 			if err != nil {
 				return fmt.Errorf("failed to get template: %w", err)
 			}
