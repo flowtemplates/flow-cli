@@ -45,14 +45,6 @@ func (s Service) ListTemplates() ([]string, error) {
 	return templateNames, nil
 }
 
-// func (s Service) ListTemplates() ([]string, error) {
-// 	templateNames, err := s.tr.GetTemplatesNames()
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to get templates names: %w", err)
-// 	}
-
-//		return templateNames, nil
-//	}
 func (s Service) Add(
 	templateName string,
 	scope map[string]*string,
@@ -90,12 +82,12 @@ func (s Service) Add(
 		return fmt.Errorf("TypeErrors: %s", err)
 	}
 
-	f := []F{}
+	f := []File{}
 	if err := s.renderDir(templateDir, sc, &f); err != nil {
 		return err
 	}
 
-	list := []F{}
+	list := []File{}
 
 	for _, dest := range dests {
 		for _, file := range f {
@@ -105,7 +97,7 @@ func (s Service) Add(
 					continue
 				}
 			}
-			list = append(list, F{
+			list = append(list, File{
 				Path:   destPath,
 				Source: file.Source,
 			})
@@ -142,12 +134,12 @@ func isTemplateFile(file fs.File) bool {
 	return strings.HasSuffix(file.Name, templateFileExt)
 }
 
-type F struct {
+type File struct {
 	Path   string
 	Source string
 }
 
-func (s Service) renderDir(dir fs.Dir, scope renderer.Scope, out *[]F) error {
+func (s Service) renderDir(dir fs.Dir, scope renderer.Scope, out *[]File) error {
 	for _, d := range dir.Dirs {
 		dirName, err := render(d.Name, scope)
 		if err != nil {
@@ -175,7 +167,7 @@ func (s Service) renderDir(dir fs.Dir, scope renderer.Scope, out *[]F) error {
 			filename = strings.TrimSuffix(filename, templateFileExt)
 		}
 
-		*out = append(*out, F{
+		*out = append(*out, File{
 			Path:   filepath.Join(dir.Path, dir.Name, filename),
 			Source: content,
 		})

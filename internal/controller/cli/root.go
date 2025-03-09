@@ -79,11 +79,11 @@ func (c CliController) showForm() error {
 	variableMap := make(map[string]*string)
 
 	var formFields []huh.Field
-	var flagFields []huh.Option[bool]
+	var flagFields []huh.Option[string]
 
 	for name, typ := range tm {
 		if typ == types.Boolean {
-			flagFields = append(flagFields, huh.NewOption(name, true))
+			flagFields = append(flagFields, huh.NewOption(name, name))
 		} else {
 			var input string
 			formFields = append(formFields, huh.NewInput().
@@ -96,7 +96,7 @@ func (c CliController) showForm() error {
 		}
 	}
 
-	var res []bool
+	var res []string
 	var dest string
 
 	groups := []*huh.Group{}
@@ -106,7 +106,7 @@ func (c CliController) showForm() error {
 
 	if len(flagFields) > 0 {
 		groups = append(groups, huh.NewGroup(
-			huh.NewMultiSelect[bool]().
+			huh.NewMultiSelect[string]().
 				Options(flagFields...).
 				Title("Flags").
 				Value(&res),
@@ -128,6 +128,10 @@ func (c CliController) showForm() error {
 
 	if err := dynamicForm.Run(); err != nil {
 		return err
+	}
+
+	for _, name := range res {
+		variableMap[name] = nil
 	}
 
 	// fmt.Printf("vars: %v\n", variableMap)

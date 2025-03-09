@@ -26,9 +26,7 @@ func Typecheck(scope renderer.Scope, tm TypeMap) []TypeError {
 		value, ok := scope[name]
 		if !ok {
 			scope[name] = typ.GetDefaultValue()
-		}
-
-		if !typ.IsValid(value) {
+		} else if !typ.IsValid(value) {
 			errs = append(errs, TypeError{
 				ExpectedType: typ,
 				Name:         name,
@@ -58,6 +56,13 @@ func GetTypeMap(ast []parser.Node, tm TypeMap) []error {
 			}
 			handleExpression(n.Body, tm, &errs)
 		case parser.IfStmt:
+			switch e := n.Condition.(type) {
+			case parser.Ident:
+				addToTypeMap(Variable{
+					Name: e.Name,
+					Typ:  types.Boolean,
+				}, tm, &errs)
+			}
 		}
 	}
 

@@ -58,11 +58,7 @@ func (c CliController) newAddCmd() *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			templateName := args[0]
 			vars := c.parseVars(args[1:])
-			// fmt.Println("templateName:", templateName)
-			// fmt.Println("vars:", vars)
-
 			paths, _ := cmd.Flags().GetStringSlice("out")
-			// fmt.Println("Paths:", paths)
 
 			overWriteFn := func(path string) bool {
 				fmt.Printf("overwrite %s\n", path)

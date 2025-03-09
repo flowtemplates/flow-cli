@@ -85,6 +85,7 @@ const (
 	FOR     // for
 	LET     // let
 	IF      // if
+	GENIF   // genif
 	ELSE    // else
 	SWITCH  // switch
 	END     // end
@@ -163,6 +164,7 @@ var tokens = []string{
 	FOR:     "for",
 	LET:     "let",
 	IF:      "if",
+	GENIF:   "genif",
 	ELSE:    "else",
 	SWITCH:  "switch",
 	END:     "end",

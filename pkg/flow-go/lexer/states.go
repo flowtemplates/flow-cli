@@ -227,6 +227,7 @@ func lexStmt(l *Lexer) stateFn {
 	if state := l.tryTokens(lexStmt,
 		token.RARR,
 		token.IF,
+		token.GENIF,
 		token.SWITCH,
 		token.CASE,
 		token.DEFAULT,

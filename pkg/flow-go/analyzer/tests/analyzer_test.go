@@ -123,6 +123,29 @@ func TestGetTypeMap(t *testing.T) {
 			},
 			errExpected: false,
 		},
+		{
+			name: "If statement",
+			str:  "{%if var%}\ntext\n{%end%}",
+			input: []parser.Node{
+				parser.IfStmt{
+					PostIfWs: " ",
+					Condition: parser.Ident{
+						Name:   "var",
+						PostWS: "",
+					},
+					Body: []parser.Node{
+						parser.Text{
+							Val: "\ntext\n",
+						},
+					},
+					Else: nil,
+				},
+			},
+			expected: analyzer.TypeMap{
+				"var": types.Boolean,
+			},
+			errExpected: false,
+		},
 	}
 	runTestCases(t, testCases)
 }

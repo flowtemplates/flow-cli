@@ -60,6 +60,17 @@ func TestStatement(t *testing.T) {
 			},
 		},
 		{
+			name:  "Simple genif statement",
+			input: "{%genif name%}",
+			expectedTokens: []token.Token{
+				{Typ: token.LSTMT},
+				{Typ: token.GENIF},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.RSTMT},
+			},
+		},
+		{
 			name:  "If with equal expression",
 			input: "{%if name==3%}",
 			expectedTokens: []token.Token{
