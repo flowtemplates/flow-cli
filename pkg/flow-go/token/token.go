@@ -8,7 +8,7 @@ import (
 type Type int
 
 func (t Type) String() string {
-	return TokenString(t)
+	return *TokenString(t)
 }
 
 const (
@@ -34,11 +34,19 @@ const (
 
 	operator_beg
 	// Operators and delimiters
-	ADD // +
-	SUB // -
-	MUL // *
-	DIV // /
-	MOD // %
+	RARR // ->
+
+	comparison_op_beg
+	LAND // &&
+	LOR  // ||
+	EQL  // ==
+	NEQL // !=
+	EXCL // !
+	LEQ  // <=
+	GEQ  // >=
+	LESS // <
+	GTR  // >
+	comparison_op_end
 
 	ASSIGN     // =
 	ADD_ASSIGN // +=
@@ -47,30 +55,14 @@ const (
 	QUO_ASSIGN // /=
 	REM_ASSIGN // %=
 
+	ADD // +
+	SUB // -
+	MUL // *
+	DIV // /
+	MOD // %
+
 	QUESTION // ?
 	COLON    // :
-
-	comparison_op_beg
-	EQL  // ==
-	LESS // <
-	GTR  // >
-	EXCL // !
-	NEQL // !=
-	LEQ  // <=
-	GEQ  // >=
-	LAND // &&
-	LOR  // ||
-	comparison_op_end
-
-	LPAREN // (
-	LBRACK // [
-	LBRACE // {
-
-	RPAREN // )
-	RBRACK // ]
-	RBRACE // }
-
-	COMMA // ,
 
 	LEXPR // {{
 	REXPR // }}
@@ -79,9 +71,7 @@ const (
 	LSTMT // {%
 	RSTMT // %}
 
-	RARR // ->
 	operator_end
-
 	keyword_beg
 	// Keywords
 	FOR     // for
@@ -100,6 +90,17 @@ const (
 	NOT     // not
 	DO      // do
 	keyword_end
+
+	LPAREN // (
+	LBRACK // [
+	LBRACE // {
+
+	COMMA // ,
+
+	RPAREN // )
+	RBRACK // ]
+	RBRACE // }
+
 )
 
 var tokens = []string{
@@ -180,8 +181,13 @@ var tokens = []string{
 	DO:      "do",
 }
 
-func TokenString(t Type) string {
-	return tokens[t]
+func TokenString(t Type) *string {
+	s := tokens[t]
+	if s == "" {
+		return nil
+	}
+
+	return &s
 }
 
 func TokenRune(t Type) rune {
@@ -200,13 +206,13 @@ func (t Token) String() string {
 		case EOF:
 			return "EOF"
 		case TEXT:
-			return fmt.Sprintf("{Typ: %s, Val: %.10q, Pos: %s}", TokenString(t.Typ), t.Val, t.Pos)
+			return fmt.Sprintf("{Typ: %s, Val: %.10q, Pos: %s}", *TokenString(t.Typ), t.Val, t.Pos)
 		default:
-			return fmt.Sprintf("{Typ: %s, Val: %q, Pos: %s}", TokenString(t.Typ), t.Val, t.Pos)
+			return fmt.Sprintf("{Typ: %s, Val: %q, Pos: %s}", *TokenString(t.Typ), t.Val, t.Pos)
 		}
 	}
 
-	return fmt.Sprintf("{Typ: %[1]s, Val: %[1]q, Pos: %s}", TokenString(t.Typ), t.Pos)
+	return fmt.Sprintf("{Typ: %[1]s, Val: %[1]s, Pos: %s}", *TokenString(t.Typ), t.Pos)
 }
 
 func (t Token) IsOneOfMany(types ...Type) bool {
@@ -215,6 +221,16 @@ func (t Token) IsOneOfMany(types ...Type) bool {
 
 func (t Token) IsValueable() bool {
 	return valueable_beg < t.Typ && t.Typ < valueable_end
+}
+
+func GetOperators() []Type {
+	res := make([]Type, operator_end-operator_beg)
+
+	for i := range int(operator_end) - int(operator_beg) {
+		res[i] = Type(i + int(operator_beg))
+	}
+
+	return res
 }
 
 func (t Token) IsComparisonOp() bool {

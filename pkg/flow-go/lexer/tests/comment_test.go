@@ -11,7 +11,7 @@ func TestComments(t *testing.T) {
 		{
 			name:  "Empty comment",
 			input: "{##}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LCOMM},
 				{Typ: token.RCOMM},
 			},
@@ -19,7 +19,7 @@ func TestComments(t *testing.T) {
 		{
 			name:  "Single comment",
 			input: "{# no comments.. #}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LCOMM},
 				{Typ: token.COMM_TEXT, Val: ` no comments.. `},
 				{Typ: token.RCOMM},
@@ -28,7 +28,7 @@ func TestComments(t *testing.T) {
 		{
 			name:  "Multiline comment",
 			input: "{# line 1\nline 2\r\n\nline 3 #}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LCOMM},
 				{Typ: token.COMM_TEXT, Val: " line 1\nline 2\r\n\nline 3 "},
 				{Typ: token.RCOMM},
@@ -37,7 +37,7 @@ func TestComments(t *testing.T) {
 		{
 			name:  "Multiple comments",
 			input: "{# line 1 #}\n{# line 2 #}\n{# line 3 #}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LCOMM},
 				{Typ: token.COMM_TEXT, Val: " line 1 "},
 				{Typ: token.RCOMM},
@@ -60,7 +60,7 @@ func TestCommentsEdgeCases(t *testing.T) {
 		{
 			name:  "Comment not terminated",
 			input: "{#",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LCOMM},
 			},
 		},

@@ -11,7 +11,7 @@ func TestStatement(t *testing.T) {
 		{
 			name:  "Simple if statement",
 			input: "{%if name%}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.IF},
 				{Typ: token.WS, Val: " "},
@@ -22,7 +22,7 @@ func TestStatement(t *testing.T) {
 		{
 			name:  "Simple switch statement",
 			input: "{%switch name%}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.SWITCH},
 				{Typ: token.WS, Val: " "},
@@ -33,7 +33,7 @@ func TestStatement(t *testing.T) {
 		{
 			name:  "Simple case statement",
 			input: "{%case value%}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.CASE},
 				{Typ: token.WS, Val: " "},
@@ -44,7 +44,7 @@ func TestStatement(t *testing.T) {
 		{
 			name:  "Simple default statement",
 			input: "{%default%}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.DEFAULT},
 				{Typ: token.RSTMT},
@@ -53,7 +53,7 @@ func TestStatement(t *testing.T) {
 		{
 			name:  "Simple end statement",
 			input: "{%end%}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.END},
 				{Typ: token.RSTMT},
@@ -62,7 +62,7 @@ func TestStatement(t *testing.T) {
 		{
 			name:  "Simple genif statement",
 			input: "{%genif name%}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.GENIF},
 				{Typ: token.WS, Val: " "},
@@ -73,7 +73,7 @@ func TestStatement(t *testing.T) {
 		{
 			name:  "If with equal expression",
 			input: "{%if name==3%}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LSTMT},
 				{Typ: token.IF},
 				{Typ: token.WS, Val: " "},

@@ -26,12 +26,8 @@ func equal(gotTokens []token.Token, expectedTokens []token.Token) error {
 		if expected.IsValueable() {
 			expectedValue = expected.Val
 		} else {
-			expectedValue = token.TokenString(expected.Typ)
+			expectedValue = *token.TokenString(expected.Typ)
 		}
-
-		// if expected.Pos != got.Pos {
-		// 	return fmt.Errorf("wrong pos: expected %+v, got %+v", expected.Pos, got.Pos)
-		// }
 
 		if got.Val != expectedValue {
 			return fmt.Errorf("wrong value: expected %q, got %q", expectedValue, got.Val)
@@ -42,9 +38,9 @@ func equal(gotTokens []token.Token, expectedTokens []token.Token) error {
 }
 
 type testCase struct {
-	name           string
-	input          string
-	expectedTokens []token.Token
+	name     string
+	input    string
+	expected []token.Token
 }
 
 func runTestCases(t *testing.T, testCases []testCase) {
@@ -59,9 +55,9 @@ func runTestCases(t *testing.T, testCases []testCase) {
 				}
 				tokens = append(tokens, tok)
 			}
-			if err := equal(tokens, tc.expectedTokens); err != nil {
-				t.Errorf("%s\nTest Case: %s\nExpected:\n%v\nGot:\n%v",
-					err, tc.name, tc.expectedTokens, tokens)
+			if err := equal(tokens, tc.expected); err != nil {
+				t.Errorf("%s\nInput: %s\nTest Case: %s\nExpected:\n%v\nGot:\n%v",
+					err, tc.input, tc.name, tc.expected, tokens)
 			}
 		})
 	}

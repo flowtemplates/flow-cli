@@ -9,21 +9,21 @@ import (
 func TestExpressions(t *testing.T) {
 	testCases := []testCase{
 		{
-			name:           "Empty input",
-			input:          "",
-			expectedTokens: []token.Token{},
+			name:     "Empty input",
+			input:    "",
+			expected: []token.Token{},
 		},
 		{
 			name:  "Plain text",
 			input: "Hello, world!",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.TEXT, Val: "Hello, world!"},
 			},
 		},
 		{
 			name:  "Simple expression",
 			input: "{{name}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "name"},
 				{Typ: token.REXPR},
@@ -32,7 +32,7 @@ func TestExpressions(t *testing.T) {
 		{
 			name:  "Whitespaces inside expr",
 			input: "{{ name		}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.WS, Val: " "},
 				{Typ: token.IDENT, Val: "name"},
@@ -43,7 +43,7 @@ func TestExpressions(t *testing.T) {
 		{
 			name:  "Multiple expressions",
 			input: "{{greeting}}, {{name}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "greeting"},
 				{Typ: token.REXPR},
@@ -56,7 +56,7 @@ func TestExpressions(t *testing.T) {
 		{
 			name:  "Var name with underscores",
 			input: "{{_user_name}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "_user_name"},
 				{Typ: token.REXPR},
@@ -65,7 +65,7 @@ func TestExpressions(t *testing.T) {
 		{
 			name:  "Var name with digits",
 			input: "{{user123}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "user123"},
 				{Typ: token.REXPR},
@@ -74,7 +74,7 @@ func TestExpressions(t *testing.T) {
 		{
 			name:  "Var name with leading dollar sign",
 			input: "{{$name}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "$name"},
 				{Typ: token.REXPR},
@@ -83,7 +83,7 @@ func TestExpressions(t *testing.T) {
 		{
 			name:  "Var name with dollar sign",
 			input: "{{mirco$oft}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "mirco$oft"},
 				{Typ: token.REXPR},
@@ -92,7 +92,7 @@ func TestExpressions(t *testing.T) {
 		{
 			name:  "Var name with non-latin symbols",
 			input: "{{こんにちは}} {{🙋}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "こんにちは"},
 				{Typ: token.REXPR},
@@ -105,7 +105,7 @@ func TestExpressions(t *testing.T) {
 		{
 			name:  "Text before, after, and between expressions",
 			input: "Hello, {{greeting}}, {{name}}! Welcome!",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.TEXT, Val: "Hello, "},
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "greeting"},
@@ -120,7 +120,7 @@ func TestExpressions(t *testing.T) {
 		{
 			name:  "Multiline input with several blocks",
 			input: "Hello,\n {{greeting}}\r\n{{name}}{{surname}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.TEXT, Val: "Hello,\n "},
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "greeting"},
@@ -143,7 +143,7 @@ func TestExpressionsEdgeCases(t *testing.T) {
 		{
 			name:  "Empty expression",
 			input: "{{}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.REXPR},
 			},
@@ -151,16 +151,17 @@ func TestExpressionsEdgeCases(t *testing.T) {
 		{
 			name:  "Line break inside expression",
 			input: "{{greeting\n}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "greeting"},
-				{Typ: token.TEXT, Val: "\n}}"},
+				{Typ: token.TEXT, Val: "\n"},
+				{Typ: token.REXPR},
 			},
 		},
 		{
 			name:  "Unclosed expression",
 			input: "Hello, {{name",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.TEXT, Val: "Hello, "},
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "name"},
@@ -169,15 +170,45 @@ func TestExpressionsEdgeCases(t *testing.T) {
 		{
 			name:  "Only left expr",
 			input: "{{",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 			},
 		},
 		{
 			name:  "Only right expr",
 			input: "}}",
-			expectedTokens: []token.Token{
-				{Typ: token.TEXT, Val: "}}"},
+			expected: []token.Token{
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Text after unclosed expression",
+			input: "{{greeting\r\nSome text",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "greeting"},
+				{Typ: token.TEXT, Val: "\r\nSome text"},
+			},
+		},
+		{
+			name:  "Single right expr between text",
+			input: "Another text}}Some text",
+			expected: []token.Token{
+				{Typ: token.TEXT, Val: "Another text"},
+				{Typ: token.REXPR},
+				{Typ: token.TEXT, Val: "Some text"},
+			},
+		},
+		{
+			name:  "Right expr after valid expression",
+			input: "{{name}}\n}}Some text",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "name"},
+				{Typ: token.REXPR},
+				{Typ: token.TEXT, Val: "\n"},
+				{Typ: token.REXPR},
+				{Typ: token.TEXT, Val: "Some text"},
 			},
 		},
 	}
@@ -189,7 +220,7 @@ func TestNumLiterals(t *testing.T) {
 		{
 			name:  "Integer value",
 			input: "{{10}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.INT, Val: "10"},
 				{Typ: token.REXPR},
@@ -198,7 +229,7 @@ func TestNumLiterals(t *testing.T) {
 		{
 			name:  "Negative integer value",
 			input: "{{-123}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.SUB, Val: "-"},
 				{Typ: token.INT, Val: "123"},
@@ -208,7 +239,7 @@ func TestNumLiterals(t *testing.T) {
 		{
 			name:  "Float value",
 			input: "{{12.3}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.FLOAT, Val: "12.3"},
 				{Typ: token.REXPR},
@@ -217,7 +248,7 @@ func TestNumLiterals(t *testing.T) {
 		{
 			name:  "Negative float value",
 			input: "{{-12.3}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.SUB, Val: "-"},
 				{Typ: token.FLOAT, Val: "12.3"},
@@ -233,7 +264,7 @@ func TestOperations(t *testing.T) {
 		{
 			name:  "Addittion",
 			input: "{{seconds+1}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "seconds"},
 				{Typ: token.ADD},
@@ -244,7 +275,7 @@ func TestOperations(t *testing.T) {
 		{
 			name:  "Subtraction",
 			input: "{{age-123.2}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "age"},
 				{Typ: token.SUB},
@@ -255,7 +286,7 @@ func TestOperations(t *testing.T) {
 		{
 			name:  "Negative number subtraction",
 			input: "{{age- -123.2}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "age"},
 				{Typ: token.SUB},
@@ -268,7 +299,7 @@ func TestOperations(t *testing.T) {
 		{
 			name:  "Multiply",
 			input: "{{age*30}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "age"},
 				{Typ: token.MUL},
@@ -279,7 +310,7 @@ func TestOperations(t *testing.T) {
 		{
 			name:  "Multiply by negative number",
 			input: "{{age*-30}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "age"},
 				{Typ: token.MUL},
@@ -291,7 +322,7 @@ func TestOperations(t *testing.T) {
 		{
 			name:  "Multiply by negative number",
 			input: "{{age*-30}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "age"},
 				{Typ: token.MUL},
@@ -303,7 +334,7 @@ func TestOperations(t *testing.T) {
 		{
 			name:  "Division",
 			input: "{{age/30}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "age"},
 				{Typ: token.DIV},
@@ -314,7 +345,7 @@ func TestOperations(t *testing.T) {
 		{
 			name:  "Division by negative number",
 			input: "{{age/-30}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "age"},
 				{Typ: token.DIV},
@@ -326,7 +357,7 @@ func TestOperations(t *testing.T) {
 		{
 			name:  "Single parens",
 			input: "{{(12/2)+age}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.LPAREN},
 				{Typ: token.INT, Val: "12"},
@@ -341,7 +372,7 @@ func TestOperations(t *testing.T) {
 		{
 			name:  "Two operations with parens",
 			input: "{{(age/-30)+(12-2.2)}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.LPAREN},
 				{Typ: token.IDENT, Val: "age"},
@@ -367,7 +398,7 @@ func TestOperationsEdgeCases(t *testing.T) {
 		{
 			name:  "Unclosed addition",
 			input: "{{1+}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.INT, Val: "1"},
 				{Typ: token.ADD},
@@ -377,7 +408,7 @@ func TestOperationsEdgeCases(t *testing.T) {
 		{
 			name:  "Unclosed expression with addition",
 			input: "{{1+",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.INT, Val: "1"},
 				{Typ: token.ADD},
@@ -392,7 +423,7 @@ func TestNumLiteralsEdgeCases(t *testing.T) {
 		{
 			name:  "Integer value with unclosed expression",
 			input: "{{10} name",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.INT, Val: "10"},
 				{Typ: token.EXPECTED_EXPR, Val: "}"},
@@ -403,7 +434,7 @@ func TestNumLiteralsEdgeCases(t *testing.T) {
 		{
 			name:  "Multiple points in float value",
 			input: "{{-12.3.2}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.SUB, Val: "-"},
 				{Typ: token.FLOAT, Val: "12.3"},
@@ -421,7 +452,7 @@ func TestStringLiterals(t *testing.T) {
 		{
 			name:  "Simple string literal in double quotes",
 			input: `{{"double"}}`,
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.STR, Val: `"double"`},
 				{Typ: token.REXPR},
@@ -430,7 +461,7 @@ func TestStringLiterals(t *testing.T) {
 		{
 			name:  "Simple string literal in single quotes",
 			input: `{{'single'}}`,
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.STR, Val: `'single'`},
 				{Typ: token.REXPR},
@@ -439,7 +470,7 @@ func TestStringLiterals(t *testing.T) {
 		{
 			name:  "Empty string literal",
 			input: `{{""}}`,
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.STR, Val: `""`},
 				{Typ: token.REXPR},
@@ -448,7 +479,7 @@ func TestStringLiterals(t *testing.T) {
 		{
 			name:  "String literal with whitespaces",
 			input: `{{"word1 word2  	word3"}}`,
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.STR, Val: `"word1 word2  	word3"`},
 				{Typ: token.REXPR},
@@ -457,7 +488,7 @@ func TestStringLiterals(t *testing.T) {
 		{
 			name:  "String literal with numbers and booleans",
 			input: `{{"123 false -22.0"}}`,
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.STR, Val: `"123 false -22.0"`},
 				{Typ: token.REXPR},
@@ -472,7 +503,7 @@ func TestStringLiteralsEdgeCases(t *testing.T) {
 		{
 			name:  "String not terminated",
 			input: `{{"double`,
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.NOT_TERMINATED_STR, Val: `"double`},
 			},
@@ -480,7 +511,7 @@ func TestStringLiteralsEdgeCases(t *testing.T) {
 		{
 			name:  "Multiple strings",
 			input: `{{"123 falseasd" 'bsdbq12 )_ asd' }}`,
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.STR, Val: `"123 falseasd"`},
 				{Typ: token.WS, Val: " "},
@@ -498,7 +529,7 @@ func TestFilters(t *testing.T) {
 		{
 			name:  "Simple filter",
 			input: "{{name->upper}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "name"},
 				{Typ: token.RARR},
@@ -509,7 +540,7 @@ func TestFilters(t *testing.T) {
 		{
 			name:  "Nested filters",
 			input: "{{name -> upper -> camel}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "name"},
 				{Typ: token.WS, Val: " "},
@@ -532,7 +563,7 @@ func TestFiltersEdgeCases(t *testing.T) {
 		{
 			name:  "Empty filter",
 			input: "{{name->}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "name"},
 				{Typ: token.RARR},
@@ -542,7 +573,7 @@ func TestFiltersEdgeCases(t *testing.T) {
 		{
 			name:  "Filter in expression",
 			input: "{{name->upper=='UP'}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "name"},
 				{Typ: token.RARR},
@@ -561,7 +592,7 @@ func TestOperators(t *testing.T) {
 		{
 			name:  "Equal",
 			input: "{{age==3}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "age"},
 				{Typ: token.EQL},
@@ -570,9 +601,31 @@ func TestOperators(t *testing.T) {
 			},
 		},
 		{
+			name:  "Not",
+			input: "{{not flag}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.NOT},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IDENT, Val: "flag"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Not equal",
+			input: "{{age!=3}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.NEQL},
+				{Typ: token.INT, Val: "3"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
 			name:  "Is",
 			input: "{{age is 3}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LEXPR},
 				{Typ: token.IDENT, Val: "age"},
 				{Typ: token.WS, Val: " "},
@@ -583,33 +636,119 @@ func TestOperators(t *testing.T) {
 			},
 		},
 		{
-			name:  "Excl",
-			input: "{{!flag}}",
-			expectedTokens: []token.Token{
+			name:  "is not",
+			input: "{{age is not 3}}",
+			expected: []token.Token{
 				{Typ: token.LEXPR},
-				{Typ: token.EXCL},
-				{Typ: token.IDENT, Val: "flag"},
-				{Typ: token.REXPR},
-			},
-		},
-		{
-			name:  "Excl",
-			input: "{{!flag}}",
-			expectedTokens: []token.Token{
-				{Typ: token.LEXPR},
-				{Typ: token.EXCL},
-				{Typ: token.IDENT, Val: "flag"},
-				{Typ: token.REXPR},
-			},
-		},
-		{
-			name:  "Not",
-			input: "{{not flag}}",
-			expectedTokens: []token.Token{
-				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "age"},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.IS},
+				{Typ: token.WS, Val: " "},
 				{Typ: token.NOT},
 				{Typ: token.WS, Val: " "},
+				{Typ: token.INT, Val: "3"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Excl",
+			input: "{{!flag}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.EXCL},
 				{Typ: token.IDENT, Val: "flag"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Greater",
+			input: "{{var>1}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.GTR},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Less",
+			input: "{{var<1}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.LESS},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Less or equal",
+			input: "{{var<=1}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.LEQ},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "Greater or equal",
+			input: "{{var>=1}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.GEQ},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "And",
+			input: "{{var and 1}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.AND},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "or",
+			input: "{{var or 1}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.OR},
+				{Typ: token.WS, Val: " "},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "&&",
+			input: "{{var&&1}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.LAND},
+				{Typ: token.INT, Val: "1"},
+				{Typ: token.REXPR},
+			},
+		},
+		{
+			name:  "||",
+			input: "{{var||1}}",
+			expected: []token.Token{
+				{Typ: token.LEXPR},
+				{Typ: token.IDENT, Val: "var"},
+				{Typ: token.LOR},
+				{Typ: token.INT, Val: "1"},
 				{Typ: token.REXPR},
 			},
 		},

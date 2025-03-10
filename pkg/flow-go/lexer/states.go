@@ -10,14 +10,20 @@ import (
 type stateFn func(*Lexer) stateFn
 
 func (l *Lexer) lexToken(t token.Type, next stateFn) stateFn {
-	l.pos.Offset += len(token.TokenString(t))
-	l.pos.Column += len(token.TokenString(t))
+	tokLen := len(*token.TokenString(t))
+	l.pos.Offset += tokLen
+	l.pos.Column += tokLen
 	l.emit(t)
 	return next
 }
 
 func (l *Lexer) StartsWith(t token.Type) bool {
-	return strings.HasPrefix(l.input[l.pos.Offset:], token.TokenString(t))
+	tokString := token.TokenString(t)
+	if tokString != nil {
+		return strings.HasPrefix(l.input[l.pos.Offset:], *tokString)
+	}
+
+	return false
 }
 
 func (l *Lexer) tryTokens(nextState stateFn, tokens ...token.Type) stateFn {
@@ -52,9 +58,10 @@ func lexText(l *Lexer) stateFn {
 			return l.lexToken(token.LCOMM, lexComm)
 		}
 
-		// if l.StartsWith(RightExpr) {
-		// 	return lexRightExpr
-		// }
+		if l.StartsWith(token.REXPR) {
+			l.emit(token.TEXT)
+			return l.lexToken(token.REXPR, lexText)
+		}
 
 		// if l.StartsWith(RightStmt) {
 		// 	return lexRightStmt
@@ -76,6 +83,10 @@ func lexText(l *Lexer) stateFn {
 // TODO: rename
 func lexRealExpr(nextState stateFn) stateFn {
 	return func(l *Lexer) stateFn {
+		// if state := l.tryTokens(lexExpr, token.GetOperators()...); state != nil {
+		// 	return state
+		// }
+
 		switch r := l.next(); {
 		case r == eof:
 			return nil
@@ -119,22 +130,12 @@ func lexExpr(l *Lexer) stateFn {
 		return l.lexToken(token.REXPR, lexText)
 	}
 
-	if state := l.tryTokens(lexExpr,
-		token.RARR,
-		token.EQL,
-		token.NEQL,
-		token.IS,
+	if state := l.tryTokens(lexExpr, append(token.GetOperators(),
 		token.NOT,
 		token.AND,
-		token.EXCL,
 		token.OR,
-		token.LAND,
-		token.LOR,
-		token.LESS,
-		token.GTR,
-		token.QUESTION,
-		token.COLON,
-	); state != nil {
+		token.IS,
+	)...); state != nil {
 		return state
 	}
 
@@ -224,28 +225,14 @@ func lexStmt(l *Lexer) stateFn {
 		return l.lexToken(token.RSTMT, lexText)
 	}
 
-	if state := l.tryTokens(lexStmt,
-		token.RARR,
+	if state := l.tryTokens(lexStmt, append(token.GetOperators(),
 		token.IF,
 		token.GENIF,
 		token.SWITCH,
 		token.CASE,
 		token.DEFAULT,
 		token.END,
-		token.EQL,
-		token.NEQL,
-		token.IS,
-		token.NOT,
-		token.EXCL,
-		token.AND,
-		token.OR,
-		token.LAND,
-		token.LOR,
-		token.LESS,
-		token.GTR,
-		token.QUESTION,
-		token.COLON,
-	); state != nil {
+	)...); state != nil {
 		return state
 	}
 

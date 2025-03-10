@@ -14,7 +14,7 @@ func TestPosition(t *testing.T) {
 		{
 			name:  "Empty if block",
 			input: "{%if name%}\n{%end%}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.LSTMT, Pos: token.Position{
 					Line:   1,
 					Column: 1,
@@ -65,7 +65,7 @@ func TestPosition(t *testing.T) {
 		{
 			name:  "Multiple expressions on many lines",
 			input: "Hello {{name}}!\nFrom {{ flow }}templates\n\n{{1 + 3}}",
-			expectedTokens: []token.Token{
+			expected: []token.Token{
 				{Typ: token.TEXT, Val: "Hello ", Pos: token.Position{
 					Line:   1,
 					Column: 1,
@@ -189,9 +189,9 @@ func TestPosition(t *testing.T) {
 				return nil
 			}
 
-			if err := eq(tokens, tc.expectedTokens); err != nil {
+			if err := eq(tokens, tc.expected); err != nil {
 				t.Errorf("%s\nTest Case: %s\nExpected:\n%v\nGot:\n%v",
-					err, tc.name, tc.expectedTokens, tokens)
+					err, tc.name, tc.expected, tokens)
 			}
 		})
 	}
