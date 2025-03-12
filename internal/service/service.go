@@ -44,7 +44,7 @@ func (s Service) ListTemplates() ([]string, error) {
 	return templateNames, nil
 }
 
-func (s Service) Add(
+func (s Service) Create(
 	templateName string,
 	scope map[string]*string,
 	overwriteFn func(files []string) ([]string, error),
@@ -122,7 +122,7 @@ func (s Service) Add(
 	return nil
 }
 
-func (s Service) GetTemplate(templateName string) (analyzer.TypeMap, error) {
+func (s Service) GetTemplateContext(templateName string) (analyzer.TypeMap, error) {
 	templateDir, err := s.tr.GetTemplate(templateName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get template: %w", err)

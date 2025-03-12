@@ -2,49 +2,31 @@ package cli
 
 import (
 	"fmt"
-	"log/slog"
 
 	"github.com/charmbracelet/huh"
-	"github.com/flowtemplates/flow-go/analyzer"
 	"github.com/flowtemplates/flow-go/types"
 	"github.com/spf13/cobra"
 )
 
-type iService interface {
-	ListTemplates() ([]string, error)
-	Add(
-		templateName string,
-		scope map[string]*string,
-		overwriteFn func(paths []string) ([]string, error),
-		dests ...string,
-	) error
-	GetTemplate(templateName string) (analyzer.TypeMap, error)
-}
-
-type CliController struct {
-	service iService
-	logger  *slog.Logger
-}
-
-func New(service iService, logger *slog.Logger) *CliController {
-	return &CliController{
-		service: service,
-		logger:  logger,
-	}
-}
-
 func (c CliController) Cmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "flow",
-		Short: "FlowTemplates CLI",
+		Short: "Flow CLI",
+		Long:  "Modern toolchain for component code generation.",
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return c.handleMain()
 		},
 	}
 
 	rootCmd.AddCommand(c.newListCmd())
-	rootCmd.AddCommand(c.newGetCmd())
-	rootCmd.AddCommand(c.newAddCmd())
+	rootCmd.AddCommand(c.newContextCmd())
+	rootCmd.AddCommand(c.newCreateCmd())
+	rootCmd.AddCommand(c.newRemoveCmd())
+	rootCmd.AddCommand(c.newUpgradeCmd())
+	rootCmd.AddCommand(c.newInitCmd())
+	rootCmd.AddCommand(c.newCloneCmd())
+	rootCmd.AddCommand(c.newVersionCmd())
+	rootCmd.AddCommand(c.newLspProxyCmd())
 
 	return rootCmd
 }
@@ -76,7 +58,7 @@ func (c CliController) handleMain() error {
 		return fmt.Errorf("failed to run template form: %w", err)
 	}
 
-	tm, err := c.service.GetTemplate(templateName)
+	tm, err := c.service.GetTemplateContext(templateName)
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
@@ -162,7 +144,7 @@ func (c CliController) handleMain() error {
 		return ov, nil
 	}
 
-	if err := c.service.Add(templateName, variableMap, overWriteFn, dest); err != nil {
+	if err := c.service.Create(templateName, variableMap, overWriteFn, dest); err != nil {
 		return fmt.Errorf("failed to add: %w", err)
 	}
 
