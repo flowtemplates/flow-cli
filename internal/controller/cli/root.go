@@ -5,8 +5,8 @@ import (
 	"log/slog"
 
 	"github.com/charmbracelet/huh"
-	"github.com/flowtemplates/cli/pkg/flow-go/analyzer"
-	"github.com/flowtemplates/cli/pkg/flow-go/types"
+	"github.com/flowtemplates/flow-go/analyzer"
+	"github.com/flowtemplates/flow-go/types"
 	"github.com/spf13/cobra"
 )
 

@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/flowtemplates/cli/pkg/fs"
+	"github.com/flowtemplates/flow-cli/pkg/fs"
 )
 
 type TemplatesRepo struct {

@@ -7,9 +7,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/flowtemplates/cli/pkg/flow-go/analyzer"
-	"github.com/flowtemplates/cli/pkg/flow-go/renderer"
-	"github.com/flowtemplates/cli/pkg/fs"
+	"github.com/flowtemplates/flow-cli/pkg/fs"
+	"github.com/flowtemplates/flow-go/analyzer"
+	"github.com/flowtemplates/flow-go/renderer"
 )
 
 type templatesRepo interface {

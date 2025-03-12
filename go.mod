@@ -1,9 +1,12 @@
-module github.com/flowtemplates/cli
+module github.com/flowtemplates/flow-cli
 
 go 1.24.0
 
+replace github.com/flowtemplates/flow-go => ../flow-go
+
 require (
 	github.com/charmbracelet/huh v0.6.0
+	github.com/flowtemplates/flow-go v0.0.0-00010101000000-000000000000
 	github.com/spf13/cobra v1.9.1
 	gopkg.in/yaml.v3 v3.0.1
 )

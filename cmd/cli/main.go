@@ -7,11 +7,11 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/flowtemplates/cli/internal/config"
-	"github.com/flowtemplates/cli/internal/controller/cli"
-	"github.com/flowtemplates/cli/internal/repository/source"
-	"github.com/flowtemplates/cli/internal/repository/templates"
-	"github.com/flowtemplates/cli/internal/service"
+	"github.com/flowtemplates/flow-cli/internal/config"
+	"github.com/flowtemplates/flow-cli/internal/controller/cli"
+	"github.com/flowtemplates/flow-cli/internal/repository/source"
+	"github.com/flowtemplates/flow-cli/internal/repository/templates"
+	"github.com/flowtemplates/flow-cli/internal/service"
 )
 
 const defaultConfigName = "flow"
