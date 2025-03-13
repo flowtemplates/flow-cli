@@ -48,13 +48,13 @@ func (s Service) Create(
 	templateName string,
 	scope map[string]*string,
 	overwriteFn func(files []string) ([]string, error),
-	dests ...string,
+	outputs ...string,
 ) error {
-	if len(dests) < 1 {
-		return errors.New("at least one dest required")
+	if len(outputs) < 1 {
+		return errors.New("at least one output required")
 	}
 
-	if err := s.sr.DirsExist(dests); err != nil {
+	if err := s.sr.DirsExist(outputs); err != nil {
 		return err // nolint: wrapcheck
 	}
 
@@ -89,7 +89,7 @@ func (s Service) Create(
 	filesToWrite := make(map[string]string)
 	overwriteRequest := []string{}
 
-	for _, dest := range dests {
+	for _, dest := range outputs {
 		for path, source := range rendered {
 			destPath := filepath.Join(dest, path)
 			if s.sr.FileExists(destPath) {

@@ -1,10 +1,10 @@
-package cli
+package main
 
 import (
 	"strings"
 )
 
-func (c CliController) parseVars(vars []string) map[string]*string {
+func parseVars(vars []string) map[string]*string {
 	res := make(map[string]*string)
 	for _, v := range vars {
 		if strings.Contains(v, "=") {

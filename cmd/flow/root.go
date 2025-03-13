@@ -1,4 +1,4 @@
-package cli
+package main
 
 import (
 	"fmt"
@@ -8,31 +8,36 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (c CliController) Cmd() *cobra.Command {
+func cmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "flow",
 		Short: "Flow CLI",
 		Long:  "Modern toolchain for component code generation.",
 		RunE: func(_ *cobra.Command, _ []string) error {
-			return c.handleMain()
+			return handleMain()
 		},
 	}
 
-	rootCmd.AddCommand(c.newListCmd())
-	rootCmd.AddCommand(c.newContextCmd())
-	rootCmd.AddCommand(c.newCreateCmd())
-	rootCmd.AddCommand(c.newRemoveCmd())
-	rootCmd.AddCommand(c.newUpgradeCmd())
-	rootCmd.AddCommand(c.newInitCmd())
-	rootCmd.AddCommand(c.newCloneCmd())
-	rootCmd.AddCommand(c.newVersionCmd())
-	rootCmd.AddCommand(c.newLspProxyCmd())
+	rootCmd.AddCommand(newListCmd())
+	rootCmd.AddCommand(newContextCmd())
+	rootCmd.AddCommand(newCreateCmd())
+	rootCmd.AddCommand(newRemoveCmd())
+	rootCmd.AddCommand(newUpgradeCmd())
+	rootCmd.AddCommand(newInitCmd())
+	rootCmd.AddCommand(newCloneCmd())
+	rootCmd.AddCommand(newVersionCmd())
+	rootCmd.AddCommand(newLspProxyCmd())
 
 	return rootCmd
 }
 
-func (c CliController) handleMain() error {
-	templates, err := c.service.ListTemplates()
+func handleMain() error {
+	s, err := createService()
+	if err != nil {
+		return err
+	}
+
+	templates, err := s.ListTemplates()
 	if err != nil {
 		return fmt.Errorf("failed to load templates: %w", err)
 	}
@@ -58,7 +63,7 @@ func (c CliController) handleMain() error {
 		return fmt.Errorf("failed to run template form: %w", err)
 	}
 
-	tm, err := c.service.GetTemplateContext(templateName)
+	tm, err := s.GetTemplateContext(templateName)
 	if err != nil {
 		return fmt.Errorf("failed to get template: %w", err)
 	}
@@ -144,7 +149,7 @@ func (c CliController) handleMain() error {
 		return ov, nil
 	}
 
-	if err := c.service.Create(templateName, variableMap, overWriteFn, dest); err != nil {
+	if err := s.Create(templateName, variableMap, overWriteFn, dest); err != nil {
 		return fmt.Errorf("failed to add: %w", err)
 	}
 
