@@ -43,10 +43,10 @@ func (id *ID) UnmarshalJSON(data []byte) error {
 }
 
 type RequestMessage struct {
-	JSONRPC JSONRPCVersion `json:"jsonrpc"`
-	ID      *ID            `json:"id"`
-	Method  Method         `json:"method"`
-	Params  any            `json:"params"`
+	JSONRPC JSONRPCVersion  `json:"jsonrpc"`
+	ID      *ID             `json:"id"`
+	Method  Method          `json:"method"`
+	Params  json.RawMessage `json:"params"`
 }
 
 // func (r *RequestMessage) UnmarshalJSON(data []byte) error {

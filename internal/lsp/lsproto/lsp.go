@@ -5,11 +5,9 @@ import (
 	"fmt"
 )
 
-type DocumentUri string // !!!
+type DocumentURI string
 
-type URI string // !!!
-
-type Method string
+type URI string
 
 type Nullable[T any] struct {
 	Value T
