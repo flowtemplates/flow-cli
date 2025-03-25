@@ -2,7 +2,7 @@
 
 .PHONY: fmt
 fmt:
-	@gofmt -s -w -l .
+	@gofumpt -w -l .
 	@goimports -w -l .
 
 .PHONY: lint

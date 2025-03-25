@@ -77,9 +77,9 @@ func (s Service) Create(
 		}
 	}
 
-	if err := analyzer.Typecheck(sc, tm); err != nil {
-		return fmt.Errorf("TypeErrors: %s", err)
-	}
+	// if err := analyzer.Typecheck(sc, tm, renderer.Context{}); err != nil {
+	// 	return fmt.Errorf("TypeErrors: %s", err)
+	// }
 
 	rendered, err := s.renderDir(templateDir, sc)
 	if err != nil {
@@ -153,7 +153,7 @@ func (s Service) renderDir(dir fs.Dir, scope renderer.Scope) (map[string]string,
 
 func (s Service) renderDirRecursive(dir fs.Dir, scope renderer.Scope, out map[string]string) error {
 	for _, d := range dir.Dirs {
-		dirName, err := renderer.RenderString(d.Name, scope)
+		dirName, err := renderer.RenderBytes([]byte(d.Name), scope)
 		if err != nil {
 			return fmt.Errorf("failed to render dirName: %w", err)
 		}
@@ -165,14 +165,14 @@ func (s Service) renderDirRecursive(dir fs.Dir, scope renderer.Scope, out map[st
 	}
 
 	for _, file := range dir.Files {
-		filename, err := renderer.RenderString(file.Name, scope)
+		filename, err := renderer.RenderBytes([]byte(file.Name), scope)
 		if err != nil {
 			return fmt.Errorf("failed to render filename: %w", err)
 		}
 
 		content := file.Source
 		if isTemplateFile(file) {
-			content, err = renderer.RenderString(file.Source, scope)
+			content, err = renderer.RenderBytes([]byte(file.Source), scope)
 			if err != nil {
 				return fmt.Errorf("failed to render file %s: %w", filename, err)
 			}
@@ -186,17 +186,17 @@ func (s Service) renderDirRecursive(dir fs.Dir, scope renderer.Scope, out map[st
 }
 
 func getTypeMapFromDir(dir fs.Dir, tm analyzer.TypeMap) error {
-	for _, file := range dir.Files {
-		if err := analyzer.GetTypeMapFromString(file.Name, tm); err != nil {
-			return fmt.Errorf("failed to parse types in filename: %w", err)
-		}
+	// for _, file := range dir.Files {
+	// if err := analyzer.TypeMapFromBytes(file.Name, tm); err != nil {
+	// 	return fmt.Errorf("failed to parse types in filename: %w", err)
+	// }
 
-		if isTemplateFile(file) {
-			if err := analyzer.GetTypeMapFromString(file.Source, tm); err != nil {
-				return fmt.Errorf("failed to parse types in file: %w", err)
-			}
-		}
-	}
+	// if isTemplateFile(file) {
+	// 	if err := analyzer.GetTypeMapFromString(file.Source, tm); err != nil {
+	// 		return fmt.Errorf("failed to parse types in file: %w", err)
+	// 	}
+	// }
+	// }
 
 	for _, d := range dir.Dirs {
 		if err := getTypeMapFromDir(d, tm); err != nil {

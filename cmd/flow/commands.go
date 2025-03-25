@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
+	"strings"
 
 	"github.com/flowtemplates/flow-cli/internal/config"
 	"github.com/flowtemplates/flow-cli/internal/lsp"
@@ -26,27 +28,62 @@ func createService() (*service.Service, error) {
 	return service.New(tr, sr), nil
 }
 
+type configExt string
+
+const (
+	configJson  configExt = "json"
+	configJsonc configExt = "jsonc"
+	configYaml  configExt = "yaml"
+	configYml   configExt = "yml"
+)
+
+var configExts = []string{
+	string(configJson),
+	string(configJsonc),
+	string(configYaml),
+	string(configYml),
+}
+
+func (e *configExt) String() string {
+	return string(*e)
+}
+
+func (e *configExt) Set(v string) error {
+	if slices.Contains(configExts, v) {
+		*e = configExt(v)
+		return nil
+	}
+
+	return fmt.Errorf("must be one of: %s", strings.Join(configExts, ", "))
+}
+
+func (e *configExt) Type() string {
+	return "string"
+}
+
 func newInitCmd() *cobra.Command {
+	ext := configYml
 	cmd := &cobra.Command{
 		Use:   "init",
 		Short: "Creates a new config file in project directory",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			fmt.Println("init")
-
+			fmt.Println(ext.String())
 			return nil
 		},
 	}
+
+	cmd.Flags().BoolP("path", "p", false, "Path to directory")
+	cmd.Flags().VarP(&ext, "ext", "e", "Config file extension")
 
 	return cmd
 }
 
 func newListCmd() *cobra.Command {
+	var printJson bool
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all template names",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			jsonOutput, _ := cmd.Flags().GetBool("json")
-
 			s, err := createService()
 			if err != nil {
 				return err
@@ -57,7 +94,7 @@ func newListCmd() *cobra.Command {
 				return fmt.Errorf("failed to list templates: %w", err)
 			}
 
-			if jsonOutput {
+			if printJson {
 				data, _ := json.Marshal(templates)
 				fmt.Printf("%s\n", data)
 			} else {
@@ -70,7 +107,7 @@ func newListCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().Bool("print-json", false, "Output in JSON format")
+	cmd.Flags().BoolVar(&printJson, "print-json", false, "Output in JSON format")
 	return cmd
 }
 
@@ -94,7 +131,7 @@ func newLspProxyCmd() *cobra.Command {
 		Short: "Start a server for the Language Server Protocol over stdin/stdout",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			logFilePath := "/home/skewbik/dev/seriousbiz/flowtemplates/flow-cli/.out/log"
-			file, err := os.OpenFile(logFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+			file, err := os.OpenFile(logFilePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
 			if err != nil {
 				return fmt.Errorf("failed to open log-file: %w", err)
 			}

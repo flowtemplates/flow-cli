@@ -197,7 +197,7 @@ func (s *Server) Run(ctx context.Context) error {
 				return err
 			}
 
-			tokens := lexer.TokensFromString(string(source))
+			tokens := lexer.TokensFromBytes(source)
 			s.logger.DebugContext(ctx, "tokens", tokens)
 
 			encoded := tokensToIntEncoding(tokens)

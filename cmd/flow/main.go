@@ -2,7 +2,8 @@ package main
 
 import (
 	"context"
-	"log"
+	"fmt"
+	"os"
 )
 
 const defaultConfigName = "flow"
@@ -28,6 +29,7 @@ const defaultConfigName = "flow"
 func main() {
 	ctx := context.Background()
 	if err := cmd().ExecuteContext(ctx); err != nil {
-		log.Fatalln(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 }

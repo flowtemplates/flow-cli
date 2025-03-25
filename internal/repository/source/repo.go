@@ -6,8 +6,7 @@ import (
 	"path/filepath"
 )
 
-type SourceRepo struct {
-}
+type SourceRepo struct{}
 
 func New() *SourceRepo {
 	return &SourceRepo{}
@@ -29,7 +28,7 @@ func (r SourceRepo) DirsExist(paths []string) error {
 func (r SourceRepo) WriteFile(path string, source string) (string, error) {
 	dirPath := filepath.Dir(path)
 
-	err := os.MkdirAll(dirPath, 0755)
+	err := os.MkdirAll(dirPath, 0o755)
 	if err != nil {
 		return "", fmt.Errorf("error creating directory: %w", err)
 	}
